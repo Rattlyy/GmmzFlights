@@ -1,5 +1,4 @@
 import cacheable.CacheRoutes
-import cacheable.ItemCache
 import cacheable.impl.Airport
 import cacheable.impl.AirportCache
 import cacheable.impl.IconCache
@@ -9,11 +8,8 @@ import klite.jackson.JsonBody
 import klite.jdbc.DBModule
 import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.LocalDate
-import kotlinx.datetime.format.char
 import org.redisson.Redisson
 import org.redisson.api.RedissonClient
-import trips.PLACEHOLDER_TRIP
-import trips.Trip
 import trips.TripRoutes
 import trips.TripService
 import kotlin.reflect.full.primaryConstructor
@@ -28,13 +24,9 @@ suspend fun main() {
     })
 
     /**
-     * TODO: fix company name is id and not name
-     * TODO: fix price being fucking enormous
-     * TODO: fix the loading screen with skeletons
-     * TODO: add a button to refresh the data
-     * TODO: add an error message something
-     * TODO: ui looks cluttered NVM it's an ugly disaster
-     * TODO: fix departure time is broken and says Tu instead of 12:00
+     * TODO: fix company name is id and not name in skrape
+     * TODO: order, filter, refresh
+     * TODO: fix arrival and departure shouldn't be time but the date lol
      */
 
     Server(

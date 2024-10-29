@@ -3,17 +3,23 @@ package trips
 import cacheable.impl.Airport
 import cacheable.impl.AirportCache
 import com.sun.net.httpserver.HttpExchange
+import klite.StatusCode
+import klite.StatusCodeException
 import klite.annotations.GET
 import klite.annotations.QueryParam
 import klite.queryParams
+import kotlinx.coroutines.delay
 import kotlinx.datetime.LocalDate
 
 @Suppress("unused")
 class TripRoutes(private val tripService: TripService, private val airportCache: AirportCache) {
     @GET("/mockFlights")
-    fun mockFlights() = mutableListOf<Trip>().apply {
-        repeat(10) {
-            add(PLACEHOLDER_TRIP)
+    suspend fun mockFlights(): MutableList<Trip> {
+        delay(1000)
+        return mutableListOf<Trip>().apply {
+            repeat(10) {
+                add(PLACEHOLDER_TRIP)
+            }
         }
     }
 
@@ -37,25 +43,27 @@ class TripRoutes(private val tripService: TripService, private val airportCache:
         require(sourceAirports.isNotEmpty()) { "Couldn't find any source airports" }
         require(destinationAirports.isNotEmpty()) { "Couldn't find any destination airports" }
 
-        return tripService.fetchTrips(
-            Airport(
-                sourceAirports.first().name,
-                sourceAirports.first().code,
-                sourceAirports.takeLast(sourceAirports.size - 1).map { it.code }
-            ),
+        return runCatching {
+            tripService.fetchTrips(
+                Airport(
+                    sourceAirports.first().name,
+                    sourceAirports.first().code,
+                    sourceAirports.takeLast(sourceAirports.size - 1).map { it.code }
+                ),
 
-            Airport(
-                destinationAirports.first().name,
-                destinationAirports.first().code,
-                destinationAirports.takeLast(destinationAirports.size - 1).map { it.code }
-            ),
+                Airport(
+                    destinationAirports.first().name,
+                    destinationAirports.first().code,
+                    destinationAirports.takeLast(destinationAirports.size - 1).map { it.code }
+                ),
 
-            adults,
-            children,
-            infants,
-            startDate,
-            endDate,
-            direct
-        )
+                adults,
+                children,
+                infants,
+                startDate,
+                endDate,
+                direct
+            )
+        }.getOrElse { throw StatusCodeException(StatusCode.NotFound, "We couldn't find any flights matching your configuration.") }
     }
 }

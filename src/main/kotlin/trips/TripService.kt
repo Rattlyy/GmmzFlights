@@ -55,13 +55,13 @@ class TripService(private val airportCache: AirportCache) {
                             val sourceAirportName = from.findFirst(".code").ownText
                             val destinationAirportName = to.findFirst(".code").ownText
                             val departureTime = from.ownText.split(" ").run {
-                                if (this.size < 3) this[1] else this[0]
+                                if (this.size <= 3) this[1] else this[0]
                             }
                             val arrivalTime = to.ownText.split(" ").run {
-                                if (this.size < 3) this[1] else this[0]
+                                if (this.size <= 3) this[1] else this[0]
                             }
                             val airline = p.findFirst(".airline").classNames.last().replace("iata", "")
-                            val price = p.findFirst(".legPrice").ownText.replace("€", "").toDouble()
+                            val price = p.findFirst(".legPrice").ownText.replace("€", "").toDouble().round(2)
 
                             flights.add(
                                 Flight(
@@ -70,7 +70,6 @@ class TripService(private val airportCache: AirportCache) {
                                     destinationAirport = airportCache.code(destinationAirportName) ?: AIRPORT_ANYWHERE,
                                     departureTime = departureTime,
                                     arrivalTime = arrivalTime,
-                                    //duration = durchas[pIndex],
                                     price = price,
                                     company = airline,
                                     companyIata = airline,

@@ -5,12 +5,14 @@ import cacheable.impl.AIRPORT_ANYWHERE
 import cacheable.impl.Airport
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.Serializable
+import kotlin.math.pow
+import kotlin.math.roundToInt
 
 @Serializable
 data class Trip(
     val flights: List<Flight>,
     val lengthOfStay: Int,
-    val totalPrice: Double = flights.sumOf { it.price },
+    val totalPrice: Double = flights.sumOf { it.price }.round(2),
     val bookUrls: Map<List<String>, String>
 )
 

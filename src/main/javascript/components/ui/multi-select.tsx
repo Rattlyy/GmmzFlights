@@ -1,19 +1,19 @@
 // src/components/multi-select.tsx
 
 import * as React from "react";
-import { cva, type VariantProps } from "class-variance-authority";
+import {cva, type VariantProps} from "class-variance-authority";
 import {
     CheckIcon,
     XCircle,
     ChevronDown,
     XIcon,
-    WandSparkles,
+    WandSparkles, PlaneTakeoff,
 } from "lucide-react";
 
-import { cn } from "@/lib/utils";
-import { Separator } from "@/components/ui/separator";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import {cn} from "@/lib/utils";
+import {Separator} from "@/components/ui/separator";
+import {Button} from "@/components/ui/button";
+import {Badge} from "@/components/ui/badge";
 import {
     Popover,
     PopoverContent,
@@ -86,7 +86,7 @@ interface MultiSelectProps
      * Optional, defaults to "Select options".
      */
     placeholder?: string;
-
+    icon?: React.ReactNode
     /**
      * Animation duration in seconds for the visual effects (e.g., bouncing badges).
      * Optional, defaults to 0 (no animation).
@@ -135,6 +135,7 @@ export const MultiSelect = React.forwardRef<
             modalPopover = false,
             asChild = false,
             className,
+            icon,
             ...props
         },
         ref
@@ -213,12 +214,12 @@ export const MultiSelect = React.forwardRef<
                                                 key={value}
                                                 className={cn(
                                                     isAnimating ? "animate-bounce" : "",
-                                                    multiSelectVariants({ variant })
+                                                    multiSelectVariants({variant})
                                                 )}
-                                                style={{ animationDuration: `${animation}s` }}
+                                                style={{animationDuration: `${animation}s`}}
                                             >
                                                 {IconComponent && (
-                                                    <IconComponent className="h-4 w-4 mr-2" />
+                                                    <IconComponent className="h-4 w-4 mr-2"/>
                                                 )}
                                                 {option?.label}
                                                 <XCircle
@@ -236,9 +237,9 @@ export const MultiSelect = React.forwardRef<
                                             className={cn(
                                                 "bg-transparent text-foreground border-foreground/1 hover:bg-transparent",
                                                 isAnimating ? "animate-bounce" : "",
-                                                multiSelectVariants({ variant })
+                                                multiSelectVariants({variant})
                                             )}
-                                            style={{ animationDuration: `${animation}s` }}
+                                            style={{animationDuration: `${animation}s`}}
                                         >
                                             {`+ ${selectedValues.length - maxCount} more`}
                                             <XCircle
@@ -263,15 +264,15 @@ export const MultiSelect = React.forwardRef<
                                         orientation="vertical"
                                         className="flex min-h-6 h-full"
                                     />
-                                    <ChevronDown className="h-4 mx-2 cursor-pointer text-muted-foreground" />
+                                    <ChevronDown className="h-4 mx-2 cursor-pointer text-muted-foreground"/>
                                 </div>
                             </div>
                         ) : (
                             <div className="flex items-center justify-between w-full mx-auto">
-                <span className="text-sm text-muted-foreground mx-3">
-                  {placeholder}
+                <span className="text-sm text-muted-foreground flex gap-2 flex-row">
+                    {icon ? icon : <></>} {placeholder}
                 </span>
-                                <ChevronDown className="h-4 cursor-pointer text-muted-foreground mx-2" />
+                                <ChevronDown className="h-4 cursor-pointer text-muted-foreground mx-2"/>
                             </div>
                         )}
                     </Button>
@@ -305,17 +306,17 @@ export const MultiSelect = React.forwardRef<
                                                         : "opacity-50 [&_svg]:invisible"
                                                 )}
                                             >
-                                                <CheckIcon className="h-4 w-4" />
+                                                <CheckIcon className="h-4 w-4"/>
                                             </div>
                                             {option.icon && (
-                                                <option.icon className="mr-2 h-4 w-4 text-muted-foreground" />
+                                                <option.icon className="mr-2 h-4 w-4 text-muted-foreground"/>
                                             )}
                                             <span>{option.label}</span>
                                         </CommandItem>
                                     );
                                 })}
                             </CommandGroup>
-                            <CommandSeparator />
+                            <CommandSeparator/>
                             <CommandGroup>
                                 <div className="flex items-center justify-between">
                                     {selectedValues.length > 0 && (
@@ -332,7 +333,7 @@ export const MultiSelect = React.forwardRef<
                                             />
                                         </>
                                     )}
-                                    <CommandSeparator />
+                                    <CommandSeparator/>
                                     <CommandItem
                                         onSelect={() => setIsPopoverOpen(false)}
                                         className="flex-1 justify-center cursor-pointer"

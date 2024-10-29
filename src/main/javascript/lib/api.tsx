@@ -1,3 +1,5 @@
+"use server"
+
 import {Airport, Icon, Trip} from "@/lib/types";
 
 export interface GetFlightsParams {
@@ -11,10 +13,16 @@ export interface GetFlightsParams {
     direct: boolean,
 }
 
+export interface ApiError {
+    status: number,
+    statusText: string
+}
+
 export async function getFlights(data: GetFlightsParams) {
     return process.env.NODE_ENV == "development" ? await api<Trip[]>(
-        `http://localhost:8080/api/flights?sourceAirports=${data.departureAirports.map(e => e.id).join(",")}&destinationAirports=${data.destinationAirports.map(e => e.id).join(",")}&adults=1&children=${data.childrenState}&infants=${data.infants}&startDate=${data.startDate.toISOString()}&endDate=${data.endDate.toISOString()}&direct=${data.direct}`
-    ) : api<Trip[]>(`http://localhost:8080/api/mockFlights`)
+        `http://localhost:8080/api/flights?sourceAirports=${data.departureAirports.map(e => e.id).join(",")}&destinationAirports=${data.destinationAirports.map(e => e.id).join(",")}&adults=1&children=${data.childrenState}&infants=${data.infants}&startDate=${data.startDate.toISOString()}&endDate=${data.endDate.toISOString()}&direct=${data.direct}`,
+        false
+    ) : api<Trip[]>(`http://localhost:8080/api/mockFlights`, false)
 }
 
 export async function getIcons() {
@@ -25,13 +33,14 @@ export async function getAirports() {
     return await api<Airport[]>(`http://localhost:8080/api/airports`)
 }
 
-async function api<T>(url: string): Promise<T> {
-    return fetch(url)
-        .then(response => {
+async function api<T>(url: string, cache: boolean = true): Promise<T | ApiError> {
+    return fetch(url, { cache: cache ? "default" : "no-store" })
+        .then(async response => {
             if (!response.ok) {
-                return Promise.reject({status: response.status, statusText: response.statusText})
+                const error = await response.json();
+                return {status: error.statusCode, statusText: error.message}
             }
 
-            return response.json() as Promise<T>
+            return await response.json() as Promise<T>
         })
 }
