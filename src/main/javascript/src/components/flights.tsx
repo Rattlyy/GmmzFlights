@@ -1,34 +1,57 @@
 import {useFlightsStore} from "../state.tsx";
 import {
     Anchor,
+    Box,
     Button,
     Card,
     Collapse,
     Divider,
     Grid,
     Group,
+    Loader,
     Stack,
     Text,
     Title
 } from "@mantine/core";
-import {Trip} from "../api/types.ts";
-import {Armchair, ClockIcon, PlaneLanding, PlaneTakeoff} from "lucide-react";
-import {$api} from "../api/api.ts";
-import {useDisclosure} from "@mantine/hooks";
-import {Fragment} from "react";
+import { Trip } from "../api/types.ts";
+import { Armchair, ClockIcon, PlaneLanding, PlaneTakeoff } from "lucide-react";
+import { $api } from "../api/api.ts";
+import { useDisclosure, useWindowScroll } from "@mantine/hooks";
+import { Fragment, useEffect, useState } from "react";
 
 export default function Flights() {
     const result = useFlightsStore(e => e.flights)
+    const blockSize = 9
+    const [showLimit, setShowLimit] = useState(1)
+    const [scroll, _scrollTo] = useWindowScroll()
+
+    const hasListFinished = showLimit*blockSize >= (result?.trips?.length??0)
+    const pixelTrasholdLoading = 15
+
+    useEffect(() => {
+        if (scroll.y >= document.body.scrollHeight - window.innerHeight - pixelTrasholdLoading && !hasListFinished)  {
+            setShowLimit((old) => old + 1)
+        }
+    }, [scroll])
     // TODO isLoading const isLoading = useFlightsStore(e => e.isLoading)
 
-    return result == null ? <Text>nind</Text> :
-        result.ok ? <Grid>
-            {result.trips!.map((e, index) =>
-                <Grid.Col span={4} key={index}>
+    if (result == null || !result.ok) {
+        return <Text>nind</Text>
+    }
+
+    return <Box>
+        <Grid>
+            {result.trips!.map((e, index) =>{
+                if (index >= showLimit*blockSize) return null
+                return <Grid.Col span={4} key={index}>
                     <Flight flight={e}/>
                 </Grid.Col>
-            )}
-        </Grid> : <Text>nind</Text>
+            })}
+        </Grid>
+        <Box display="flex" style={{ width: "100%", alignItems: "center", justifyContent:"center"}} my={5}>
+            {(!hasListFinished)?<Loader />:null}
+        </Box>
+    </Box>
 }
 
 interface FlightProps {
@@ -37,13 +60,14 @@ interface FlightProps {
 
 export function Flight({flight}: FlightProps) {
     const [opened, {toggle}] = useDisclosure(false);
+
     return <Card>
         <Stack>
             <Divider/>
             {flight.hops.map((hop, hopIndex) =>
                 <Fragment key={hopIndex}>
                     <Group justify="space-between">
-                        <Stack align={"flex-start"}>
+                            <Stack align={"flex-start"}>
                             <Group>
                                 <PlaneTakeoff/>
                                 <Title order={2}>{hop.sourceAirport.code}</Title> {/*todo: tooltip*/}
@@ -62,13 +86,16 @@ export function Flight({flight}: FlightProps) {
                                     <Text>{hop.departureTime}</Text>
                                 </Group>
                             </Stack>
-                        </Stack>
+                            </Stack>
+
+                        
                         <Stack h={"100%"} justify={"center"} align={"center"}>
                             <Divider w={"10px"}/>
                             <Text c={"dimmed"}>Price</Text>
                             <Title order={5}>{hop.price} €</Title>
                             <Divider w={"10px"}/>
                         </Stack>
+                        
                         <Stack align={"flex-start"}>
                             <Group>
                                 <PlaneLanding/>
@@ -97,6 +124,7 @@ export function Flight({flight}: FlightProps) {
                     <Divider/>
                 </Fragment>
             )}
+
             <Button onClick={toggle}>Book</Button>
 
             <Collapse in={opened}>
@@ -114,6 +142,7 @@ export function Flight({flight}: FlightProps) {
                     )}
                 </Grid>
             </Collapse>
+
         </Stack>
     </Card>
 }
@@ -124,7 +153,7 @@ interface IconProps {
 }
 
 function Company({company, iata}: IconProps) {
-    const {data, isLoading} = $api.useQuery(
+    const iconQuery = $api.useQuery(
         "get",
         "/icons"
     )
@@ -137,7 +166,7 @@ function Company({company, iata}: IconProps) {
             justifySelf: "center",
             alignSelf: "center",
             // @ts-expect-error shouldnt happen
-            backgroundImage: `${isLoading ? "" : data.find(icon => icon.code == iata)!.css}`
+            backgroundImage: `${!iconQuery.isFetched ? "" : iconQuery.data?.find(icon => icon.code == iata)!.css}`
         }}></div>
         <Text>{company}</Text>
     </Group>
