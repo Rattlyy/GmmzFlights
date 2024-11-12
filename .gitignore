@@ -41,3 +41,7 @@ bin/
 ### Mac OS ###
 .DS_Store
 /.env
+/src/main/javascript/src/api/types.ts
+/src/main/javascript/src/api/v1.d.ts
+/src/main/javascript/src/api/zod.ts
+/src/main/javascript/openapi

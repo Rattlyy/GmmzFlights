@@ -5,12 +5,16 @@ import {devtools} from "zustand/middleware";
 
 interface FlightsStore {
     flights: SearchResult | null;
+    isLoading: boolean
     setFlights: (trips: SearchResult) => void
+    setIsLoading: (isLoading: boolean) => void
 }
 
 export const useFlightsStore = create<FlightsStore>()(devtools(
     (set) => ({
         flights: null,
-        setFlights: trips => set({flights: trips})
+        isLoading: false,
+        setFlights: trips => set({flights: trips}),
+        setIsLoading: isLoading => set({isLoading: isLoading})
     })
 ))

@@ -1,117 +1,236 @@
-import {useForm} from "@mantine/form";
-import {Button, Checkbox, MultiSelect, Stack} from "@mantine/core";
 import {$api, apiClient} from "../api/api.ts";
 import {PlaneLanding, PlaneTakeoff} from "lucide-react";
-import {DatePicker} from "@mantine/dates";
 import {useFlightsStore} from "../state.tsx";
-import {useState} from "react";
+import React, {useEffect, useMemo} from "react";
 import {searchResultSchema} from "../api/zod.ts";
+import {Button} from "@/components/ui/button.tsx";
+import {z} from "zod";
+import {useForm} from "react-hook-form";
+import {zodResolver} from "@hookform/resolvers/zod";
+import {MultiSelect} from "@/components/ui/multiselect.tsx";
+import {SingleAirport} from "@/api/types.ts";
+import {DatePickerWithRange} from "@/components/date-picker.tsx";
+import {Checkbox} from "@/components/ui/checkbox.tsx";
+import {
+    Form,
+    FormControl,
+    FormField,
+    FormItem,
+    FormLabel,
+    FormMessage
+} from "@/components/ui/form.tsx";
 
 export function SearchBox() {
-    const setFlights = useFlightsStore(e => e.setFlights)
-    const [isInFlight, setIsInFlight] = useState<boolean>()
+    const {isLoading: isInFlight, setIsLoading: setIsInFlight, setFlights} = useFlightsStore()
     const nextYear = new Date()
     nextYear.setFullYear(nextYear.getFullYear() + 1)
 
-    const form = useForm({
-        mode: 'uncontrolled',
-        initialValues: {
+    const formSchema = z.object({
+        sourceAirports: z.array(z.string()).min(1, "Provide atleast 1 airport."),
+        destinationAirports: z.array(z.string()).min(1, "Provide atleast 1 airport."),
+        adults: z.number().min(1),
+        children: z.number(),
+        infants: z.number(),
+        everywhere: z.boolean(),
+        direct: z.boolean(),
+        dateRange: z.object({
+            startDate: z.date(),
+            endDate: z.date()
+        })
+    }) //TODO: validates
+
+    const {isLoading, data: airports, /*isError TODO*/} = $api.useQuery(
+        "get",
+        "/airports"
+    )
+
+    const airportCodes = () => (airports == undefined ? [] : airports).map(e => e.code)
+
+    const form = useForm<z.infer<typeof formSchema>>({
+        resolver: zodResolver(formSchema),
+        defaultValues: {
+            dateRange: {startDate: new Date(), endDate: nextYear},
             sourceAirports: [],
             destinationAirports: [],
             adults: 1,
             children: 0,
             infants: 0,
-            dates: [new Date(), nextYear],
-            everywhere: false,
-            direct: false
+            direct: false,
+            everywhere: false
         },
+    })
 
-        validate: {}, //TODO both airport must exist e altra roba
-    });
+    const everywhereToggled = form.watch("everywhere")
+    useEffect(() => {
+        if (everywhereToggled) {
+            form.setValue("destinationAirports", ["XXX"])
+        } else {
+            form.setValue("destinationAirports", [])
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [everywhereToggled]);
 
-    const {isLoading, data, isError} = $api.useQuery(
-        "get",
-        "/airports"
-    )
-
-    // @ts-expect-error shouldn't happen
-    const airports = () => data.map(e => (
-        {label: `${e.name} [${e.code}]`, value: e.code}
-    ))
+    function onSubmit(values: z.infer<typeof formSchema>) {
+        setIsInFlight(true)
+        apiClient.GET("/flights", {
+            params: {
+                query: {
+                    ...values,
+                    //@ts-expect-error codegen rotto
+                    sourceAirports: values.sourceAirports.join(","),
+                    //@ts-expect-error codegen rotto
+                    destinationAirports: values.destinationAirports.join(","),
+                    startDate: values.dateRange.startDate.toISOString(),
+                    endDate: values.dateRange.endDate.toISOString(),
+                    dateRange: undefined
+                }
+            }
+        }).then((res) => {
+            const results = searchResultSchema.safeParse(res.data)
+            if (results.success) {
+                setFlights(results.data)
+            } else {
+                //TODO: HANDLE ERRORS PORCA MADONNA
+            }
+        }).catch((e) => {
+            console.log(e)
+        }).finally(() => {
+            setIsInFlight(false)
+        })
+    }
 
     return (
-        <form onSubmit={
-            form.onSubmit((values) => {//TODO: error handling
-                setIsInFlight(true)
-                apiClient.GET("/flights", {
-                    params: {
-                        query: {
-                            // @ts-expect-error codegen rotto
-                            sourceAirports: values.sourceAirports.join(","),
-                            // @ts-expect-error codegen rotto
-                            destinationAirports: values.destinationAirports.join(","),
-                            adults: values.adults,
-                            children: values.children,
-                            infants: values.infants,
-                            startDate: values.dates[0].toISOString(),
-                            endDate: values.dates[1].toISOString()
-                        }
-                    }
-                }).then((res) => {
-                    const results = searchResultSchema.safeParse(res.data)
-                    if (results.success) {
-                        setFlights(results.data)
-                    } else {
-                        //TODO: HANDLE ERRORS PORCA MADONNA
-                    }
-                }).catch((e) => {
-                    console.log(e)
-                }).finally(() => {
-                    setIsInFlight(false)
-                })
-            })
-        }>
-            <Stack
-                align="stretch"
-                justify="center"
-                gap="md"
-            >
-                <MultiSelect
-                    leftSection={<PlaneTakeoff/>}
-                    label="Departure airports"
-                    placeholder={isLoading ? "Loading..." : "Choose your airports.."}
-                    data={(isLoading || isError) ? [] : airports()}
-                    searchable
-                    key={form.key('sourceAirports')}
-                    disabled={isLoading}
-                    {...form.getInputProps('sourceAirports')}
-                />
+        <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)}>
+                <div className={"flex flex-col gap-5"}>
+                    <AirportMultiSelect
+                        label="Departure Airports"
+                        value={"sourceAirports"}
+                        airportCodes={airportCodes()}
+                        isLoading={isLoading}
+                        airports={airports}
+                        form={form}
+                        icon={PlaneTakeoff}
+                        disabled={false}
+                    />
 
-                <MultiSelect
-                    leftSection={<PlaneLanding/>}
-                    label="Arrival airports"
-                    placeholder={isLoading ? "Loading..." : "Choose your airports.."}
-                    data={(isLoading || isError) ? [] : airports()}
-                    searchable
-                    key={form.key('destinationAirports')}
-                    disabled={isLoading || form.getValues()["everywhere"]}
-                    {...form.getInputProps('destinationAirports')}
-                />
+                    <AirportMultiSelect
+                        label="Destination Airports"
+                        value={"destinationAirports"}
+                        airportCodes={airportCodes()}
+                        isLoading={isLoading}
+                        airports={airports}
+                        form={form}
+                        icon={PlaneLanding}
+                        disabled={form.watch("everywhere")}
+                    />
 
-                <Checkbox
-                    label={"Everywhere"}
-                    key={form.key('everywhere')}
-                    {...form.getInputProps('everywhere')}
-                />
+                    <FormField
+                        control={form.control}
+                        name="dateRange"
+                        render={({field}) =>
+                            <FormItem>
+                                <FormLabel>Dates</FormLabel>
+                                <FormControl>
+                                    <DatePickerWithRange
+                                        setDateRange={field.onChange}
+                                        dateRange={field.value}
+                                    />
+                                </FormControl>
+                                <FormMessage/>
+                            </FormItem>
+                        }/>
 
-                <DatePicker
-                    type={"range"}
-                    key={form.key('dates')}
-                    {...form.getInputProps('dates')}
-                />
+                    <div className={"flex flex-row w-full items-center justify-between"}>
+                        <FormField
+                            control={form.control}
+                            name="everywhere"
+                            render={({field}) =>
+                                <FormItem className={"flex flex-row gap-2 justify-center items-center text-center"}>
+                                    <FormControl>
+                                        <Checkbox
+                                            {...field}
+                                            value={undefined}
+                                            checked={field.value}
+                                            onCheckedChange={field.onChange}
+                                            className={"border-white"}
+                                        />
+                                    </FormControl>
+                                    <FormLabel>Everywhere</FormLabel>
+                                    <FormMessage/>
+                                </FormItem>
+                            }
+                        />
 
-                <Button type={"submit"} disabled={isInFlight}>Search</Button>
-            </Stack>
-        </form>
+                        <FormField
+                            control={form.control}
+                            name="direct"
+                            render={({field}) =>
+                                <FormItem className={"flex flex-row gap-2 justify-center items-center text-center"}>
+                                    <FormControl>
+                                        <Checkbox
+                                            {...field}
+                                            value={undefined}
+                                            checked={field.value}
+                                            onCheckedChange={field.onChange}
+                                            className={"border-white"}
+                                        />
+                                    </FormControl>
+                                    <FormLabel>Direct flights</FormLabel>
+                                    <FormMessage/>
+                                </FormItem>
+                            }
+                        />
+                    </div>
+
+                    <Button type={"submit"} disabled={isInFlight}> Search</Button>
+                </div>
+            </form>
+        </Form>
     )
+}
+
+type AirportMultiSelectProps = {
+    label: string,
+    value: string,
+    airportCodes: string[],
+    isLoading: boolean,
+    airports?: SingleAirport[],
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    form: any,
+    icon: React.ComponentType<{ className?: string }>
+    disabled: boolean
+}
+
+function AirportMultiSelect(props: AirportMultiSelectProps) {
+    const airports = useMemo(
+        () => (props.airports == null ? [] : props.airports).map(option => ({
+            label: option.name + " [" + option.code + "]",
+            value: option.code,
+            icon: props.icon
+        })), [props.airports, props.icon]
+    )
+
+    return <FormField
+        control={props.form.control}
+        name={props.value}
+        render={({field}) =>
+            <FormItem>
+                <FormLabel>{props.label}</FormLabel>
+                <FormControl>
+                    <MultiSelect
+                        options={airports}
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                        placeholder={props.label}
+                        variant="default"
+                        animation={2}
+                        maxCount={3}
+                        disabled={props.disabled}
+                    />
+                </FormControl>
+                <FormMessage/>
+            </FormItem>
+        }
+    />
 }

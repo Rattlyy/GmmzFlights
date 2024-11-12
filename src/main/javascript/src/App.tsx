@@ -1,45 +1,20 @@
-import '@mantine/core/styles.css';
-import {AppShell, Burger, Group, Title} from "@mantine/core";
-import {useDisclosure} from "@mantine/hooks";
-import {SearchBox} from "./components/searchbox.tsx";
-import Flights from "./components/flights.tsx";
-import {Luggage} from "lucide-react";
+import {AppSidebar} from "@/components/app-sidebar"
+import {
+    SidebarInset,
+    SidebarProvider,
+} from "@/components/ui/sidebar"
+import Flights from "@/components/flights.tsx";
+import {TopBar} from "@/components/topbar.tsx";
 
-function App() {
-    const [opened, {toggle}] = useDisclosure()
+export function App() {
     return (
-        <>
-            <AppShell
-                header={{height: 60}}
-                navbar={{
-                    width: 300,
-                    breakpoint: 'sm',
-                    collapsed: {mobile: !opened},
-                }}
-                padding="md"
-            >
-                <AppShell.Header>
-                    <Burger
-                        opened={opened}
-                        onClick={toggle}
-                        hiddenFrom="sm"
-                        size="sm"
-                    />
-
-                    <Group h={"100%"} pl={"md"}>
-                        <Luggage size={30}/>
-                        <Title order={1}>gmmz.dev // flights</Title>
-                    </Group>
-                </AppShell.Header>
-
-                <AppShell.Navbar p="md">
-                    <SearchBox/>
-                </AppShell.Navbar>
-
-                <AppShell.Main><Flights/></AppShell.Main>
-            </AppShell>
-        </>
+        <SidebarProvider>
+            <AppSidebar/>
+            <SidebarInset>
+                <TopBar/>
+                <Flights/>
+            </SidebarInset>
+        </SidebarProvider>
     )
 }
 
-export default App

@@ -9,9 +9,6 @@ import it.rattly.flights.redisson
 import klite.annotations.GET
 import klite.annotations.QueryParam
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.reactive.awaitFirst
-import kotlinx.coroutines.reactive.awaitFirstOrElse
-import kotlinx.coroutines.reactive.awaitFirstOrNull
 import kotlinx.coroutines.reactive.awaitSingle
 import kotlinx.datetime.LocalDate
 import org.redisson.api.RLocalCachedMapReactive
@@ -74,7 +71,7 @@ class TripRoutes(private val tripService: TripService, private val airportCache:
             direct
         ).sumOf { it.hashCode() }
 
-        return if (cache.containsKey(cacheKey).awaitSingle())
+        return if (System.getenv("DISABLE_CACHING") == "false" && cache.containsKey(cacheKey).awaitSingle())
             cache.get(cacheKey).awaitSingle().also { println("[$cacheKey] HIT") }
         else tripService.fetchTrips(
             AirportQuery(

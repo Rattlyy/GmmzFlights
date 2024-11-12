@@ -115,6 +115,12 @@ tasks.register<JavaExec>("types.ts") {
     }
 }
 
+tasks.register<Exec>("generateBunStuff") {
+    dependsOn("types.ts")
+    workingDir(layout.projectDirectory.dir("src/main/javascript"))
+    commandLine("bun", "run", "openapi", "&&", "bun", "run", "zod")
+}
+
 idea {
     module {
         isDownloadSources = true

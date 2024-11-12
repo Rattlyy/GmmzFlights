@@ -1,57 +1,51 @@
 import {useFlightsStore} from "../state.tsx";
-import {
-    Anchor,
-    Box,
-    Button,
-    Card,
-    Collapse,
-    Divider,
-    Grid,
-    Group,
-    Loader,
-    Stack,
-    Text,
-    Title
-} from "@mantine/core";
-import { Trip } from "../api/types.ts";
-import { Armchair, ClockIcon, PlaneLanding, PlaneTakeoff } from "lucide-react";
-import { $api } from "../api/api.ts";
-import { useDisclosure, useWindowScroll } from "@mantine/hooks";
-import { Fragment, useEffect, useState } from "react";
+import {Trip} from "../api/types.ts";
+import {$api} from "../api/api.ts";
+import {Card, CardContent} from "@/components/ui/card.tsx";
+import {Calendar, Clock, PlaneLanding, PlaneTakeoff} from "lucide-react";
+import {Separator} from "@/components/ui/separator.tsx";
+import {Button} from "@/components/ui/button.tsx";
+import Lottie from 'react-lottie';
+import papera from "@/assets/papera.json"
+import aereoVola from "@/assets/aereo-vola.json"
+import {Popover, PopoverContent, PopoverTrigger} from "@/components/ui/popover.tsx";
+import {lottieOptions} from "@/lib/utils.ts";
 
 export default function Flights() {
-    const result = useFlightsStore(e => e.flights)
-    const blockSize = 9
-    const [showLimit, setShowLimit] = useState(1)
-    const [scroll, _scrollTo] = useWindowScroll()
+    const {flights: result, isLoading} = useFlightsStore()
+    if (result == null || !result.ok || result.trips == null) {
+        return <div className={"w-full h-full flex flex-col items-center justify-center"}>
+            <Lottie
+                options={lottieOptions(papera)}
+                isClickToPauseDisabled={true}
+                height={200}
+                width={200}
+            />
 
-    const hasListFinished = showLimit*blockSize >= (result?.trips?.length??0)
-    const pixelTrasholdLoading = 15
-
-    useEffect(() => {
-        if (scroll.y >= document.body.scrollHeight - window.innerHeight - pixelTrasholdLoading && !hasListFinished)  {
-            setShowLimit((old) => old + 1)
-        }
-    }, [scroll])
-    // TODO isLoading const isLoading = useFlightsStore(e => e.isLoading)
-
-    if (result == null || !result.ok) {
-        return <Text>nind</Text>
+            <div className={"flex flex-row items-center justify-center text-center pt-4"}>
+                <PlaneTakeoff/>
+                <h1 className={"pl-4 pr-4 text-xl text-muted-foreground "}>gmmz.dev // flights</h1>
+                <PlaneLanding/>
+            </div>
+        </div>
     }
 
-    return <Box>
-        <Grid>
-            {result.trips!.map((e, index) =>{
-                if (index >= showLimit*blockSize) return null
-                return <Grid.Col span={4} key={index}>
-                    <Flight flight={e}/>
-                </Grid.Col>
-            })}
-        </Grid>
-        <Box display="flex" style={{ width: "100%", alignItems: "center", justifyContent:"center"}} my={5}>
-            {(!hasListFinished)?<Loader />:null}
-        </Box>
-    </Box>
+    if (isLoading) {
+        return <div className={"w-full h-full flex flex-col items-center justify-center"}>
+            <Lottie
+                options={lottieOptions(aereoVola)}
+                isClickToPauseDisabled={true}
+                height={200}
+                width={200}
+            />
+        </div>
+    }
+
+    return <main className="flex-1 bg-muted/20 py-8">
+        <div className="max-w-full pl-5 pr-5 mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {result.trips.map((flight, i) => <Flight key={i} flight={flight}/>)}
+        </div>
+    </main>
 }
 
 interface FlightProps {
@@ -59,115 +53,85 @@ interface FlightProps {
 }
 
 export function Flight({flight}: FlightProps) {
-    const [opened, {toggle}] = useDisclosure(false);
-
-    return <Card>
-        <Stack>
-            <Divider/>
-            {flight.hops.map((hop, hopIndex) =>
-                <Fragment key={hopIndex}>
-                    <Group justify="space-between">
-                            <Stack align={"flex-start"}>
-                            <Group>
-                                <PlaneTakeoff/>
-                                <Title order={2}>{hop.sourceAirport.code}</Title> {/*todo: tooltip*/}
-                            </Group>
-
-                            <Stack gap={"1px"}>
-                                <Text c={"dimmed"}>Airline</Text>
-                                <Company company={hop.company} iata={hop.companyIata}/>
-                            </Stack>
-
-                            <Stack gap={"1px"}>
-                                <Text c={"dimmed"}>Time</Text>
-
-                                <Group gap={"4px"} align={"center"}>
-                                    <ClockIcon size={"15px"}/>
-                                    <Text>{hop.departureTime}</Text>
-                                </Group>
-                            </Stack>
-                            </Stack>
-
-                        
-                        <Stack h={"100%"} justify={"center"} align={"center"}>
-                            <Divider w={"10px"}/>
-                            <Text c={"dimmed"}>Price</Text>
-                            <Title order={5}>{hop.price} €</Title>
-                            <Divider w={"10px"}/>
-                        </Stack>
-                        
-                        <Stack align={"flex-start"}>
-                            <Group>
-                                <PlaneLanding/>
-                                <Title order={2}>{hop.destinationAirport.code}</Title> {/*todo: tooltip*/}
-                            </Group>
-
-                            <Stack gap={"1px"}>
-                                <Text c={"dimmed"}>Arrival</Text>
-
-                                <Group gap={"4px"} align={"center"}>
-                                    <ClockIcon size={"15px"}/>
-                                    <Text>{hop.arrivalTime}</Text>
-                                </Group>
-                            </Stack>
-
-                            <Stack gap={"1px"}>
-                                <Text c={"dimmed"}>Seats</Text>
-
-                                <Group gap={"4px"} align={"center"}>
-                                    <Armchair size={"15px"}/>
-                                    <Text>{hop.cheapSeats}</Text>
-                                </Group>
-                            </Stack>
-                        </Stack>
-                    </Group>
-                    <Divider/>
-                </Fragment>
-            )}
-
-            <Button onClick={toggle}>Book</Button>
-
-            <Collapse in={opened}>
-                <Grid grow gutter={"sm"} justify={"center"} columns={2}>
-                    {flight.bookUrls.map((e, urlIndex) =>
-                        <Fragment key={urlIndex}>
-                            {e.urls.map((u, uIndex) =>
-                                <Grid.Col span={1} key={uIndex}>
-                                    <Group justify={"center"} align={"center"}>
-                                        <Anchor href={u} target={"_blank"}><Button>{e.name}</Button></Anchor>
-                                    </Group>
-                                </Grid.Col>
-                            )}
-                        </Fragment>
-                    )}
-                </Grid>
-            </Collapse>
-
-        </Stack>
-    </Card>
-}
-
-interface IconProps {
-    company: string,
-    iata: string
-}
-
-function Company({company, iata}: IconProps) {
-    const iconQuery = $api.useQuery(
+    const {data: icons} = $api.useQuery(
         "get",
         "/icons"
     )
 
-    return <Group gap={"5px"}>
-        <div style={{
-            width: "16px",
-            height: "16px",
-            backgroundRepeat: "no-repeat",
-            justifySelf: "center",
-            alignSelf: "center",
-            // @ts-expect-error shouldnt happen
-            backgroundImage: `${!iconQuery.isFetched ? "" : iconQuery.data?.find(icon => icon.code == iata)!.css}`
-        }}></div>
-        <Text>{company}</Text>
-    </Group>
+    return <Card>
+        <CardContent className="flex flex-col gap-4 pt-8 pl-8 pr-8">
+            {flight.hops.map(hop => <>
+                <div className="flex items-center justify-between gap-2 font-medium text-xl">
+                    {[hop.sourceAirport, hop.destinationAirport].map((airport, i) =>
+                        <Popover key={i} modal={false}>
+                            <PopoverTrigger>
+                                <div className="flex gap-2">
+                                    {i == 0 ? <PlaneTakeoff className="w-6 h-6"/> :
+                                        <PlaneLanding className="w-6 h-6"/>} {airport.code}
+                                </div>
+                            </PopoverTrigger>
+                            <PopoverContent>
+                                {airport.name}
+                            </PopoverContent>
+                        </Popover>
+                    )}
+                </div>
+                <div className="flex items-center justify-between">
+                    <div className="flex flex-col gap-2">
+                        <div>
+                            <div className="text-sm text-muted-foreground">Airline</div>
+                            <div className="font-medium flex flex-row gap-1">
+                                <div className="w-[16px] h-[16px] bg-no-repeat justify-self-center self-center"
+                                     style={{backgroundImage: `${(icons ? icons : []).find(icon => icon.code == hop.companyIata)?.css}`}}/>
+                                {hop.company}
+                            </div>
+                        </div>
+                        <div>
+                            <div className="text-sm text-muted-foreground">Date</div>
+                            <div className="flex items-center gap-1">
+                                <Calendar className="w-5 h-5 self-center justify-self-center"/>
+                                <div className="font-medium">{hop.date}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="self-center justify-self-center flex flex-col">
+                    </div>
+
+                    <div className="flex flex-col gap-2">
+                        <div>
+                            <div className="text-sm text-muted-foreground">Departure</div>
+                            <div className="font-medium flex flex-row gap-1">
+                                <Clock className="w-5 h-5 self-center justify-self-center"/>
+                                <div className="font-medium">{hop.departureTime}</div>
+                            </div>
+                        </div>
+                        <div>
+                            <div className="text-sm text-muted-foreground">Arrival</div>
+                            <div className="font-medium flex flex-row gap-1">
+                                <Clock className="w-5 h-5 self-center justify-self-center"/>
+                                <div className="font-medium">{hop.arrivalTime}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <Separator/>
+            </>)}
+            <div className="flex-col items-center justify-between">
+                {flight.hops.map(flight => <>
+                    <div className="flex justify-between">
+                        <div className="text-md text-muted-foreground">Leg Price</div>
+                        <div className="text-md">{flight.price} €</div>
+                    </div>
+                </>)}
+
+                <div className="flex justify-between items-center">
+                    <div className="font-medium text-2xl">Total Price</div>
+                    <div className="font-extrabold text-3xl">{flight.totalPrice} €</div>
+                </div>
+            </div>
+
+            <Button className="w-full">Book</Button>
+        </CardContent>
+    </Card>
 }

@@ -13,6 +13,7 @@ import klite.openapi.openApi
 import kotlinx.datetime.LocalDate
 import org.redisson.Redisson
 import org.redisson.api.RedissonReactiveClient
+import kotlin.properties.Delegates
 import kotlin.reflect.full.primaryConstructor
 import org.redisson.config.Config as RedissonConfig
 
@@ -28,7 +29,6 @@ suspend fun main() {
      * TODO: fix company name is id and not name in skrape
      * TODO: order, filter, refresh
      * TODO: fix arrival and departure shouldn't be time but the date lol
-     * TODO: skrape -> ksoup
      */
 
     Server(
