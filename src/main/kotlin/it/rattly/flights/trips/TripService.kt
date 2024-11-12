@@ -8,6 +8,7 @@ import it.rattly.flights.BookUrl
 import it.rattly.flights.Flight
 import it.rattly.flights.Trip
 import it.rattly.flights.cacheable.impl.AirportCache
+import klite.base64Encode
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.format
 import kotlinx.datetime.format.char
@@ -45,18 +46,19 @@ class TripService(private val airportCache: AirportCache) {
                         lengthOfStay = 212,
                         bookUrls = res.select("a").mapNotNull { it ->
                             BookUrl(
-                                it.attribute("onclick")?.value
-                                    ?.replace("trackBook('", "")
-                                    ?.replace("')", "")
-                                    ?.replace(",'", ",")
-                                    ?.split("',")
-                                    ?.filter { it.toIntOrNull() == null }
-                                    ?.map { airportCache.code(it) }
-                                    ?.joinToString(" -> ")
-                                    ?: "", it.attributes().mapNotNull { it.value }.filter { it.contains("book") }
+                                (it.attribute("onclick") ?: return@mapNotNull null).value
+                                    .replace("trackBook('", "")
+                                    .replace("')", "")
+                                    .replace(",'", ",")
+                                    .split("',")
+                                    .filter { it.toIntOrNull() == null }
+                                    .mapNotNull { airportCache.code(it) }
+                                    .joinToString(" -> "),
+                                it.attributes().mapNotNull { it.value }.filter { it.contains("book/") }.map {
+                                    "/bookUrls?url=" + it.base64Encode()
+                                }
                             )
-                        }.filterNot { it.urls.isEmpty() }
-                            .filterNot { it.name.contains("null") || it.urls.any { it.contains("null") } }.distinct()
+                        }.filterNot { it.urls.isEmpty() }.distinct()
                     )
                 }
         }

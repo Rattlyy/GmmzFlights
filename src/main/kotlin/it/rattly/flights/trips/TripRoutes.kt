@@ -1,5 +1,6 @@
 package it.rattly.flights.trips
 
+import fuel.httpGet
 import it.rattly.flights.AirportQuery
 import it.rattly.flights.PLACEHOLDER_TRIP
 import it.rattly.flights.Trip
@@ -8,11 +9,13 @@ import it.rattly.flights.cacheable.impl.SingleAirport
 import it.rattly.flights.redisson
 import klite.annotations.GET
 import klite.annotations.QueryParam
+import klite.base64Decode
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.reactive.awaitSingle
 import kotlinx.datetime.LocalDate
 import org.redisson.api.RLocalCachedMapReactive
 import org.redisson.api.options.LocalCachedMapOptions.name
+import java.nio.charset.Charset
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.toJavaDuration
 
@@ -71,7 +74,7 @@ class TripRoutes(private val tripService: TripService, private val airportCache:
             direct
         ).sumOf { it.hashCode() }
 
-        return if (System.getenv("DISABLE_CACHING") == "false" && cache.containsKey(cacheKey).awaitSingle())
+        return if (cache.containsKey(cacheKey).awaitSingle())
             cache.get(cacheKey).awaitSingle().also { println("[$cacheKey] HIT") }
         else tripService.fetchTrips(
             AirportQuery(

@@ -1,5 +1,6 @@
 package it.rattly.flights
 
+import fuel.httpGet
 import it.rattly.flights.cacheable.CacheRoutes
 import it.rattly.flights.cacheable.impl.AirportCache
 import it.rattly.flights.cacheable.impl.IconCache
@@ -13,7 +14,8 @@ import klite.openapi.openApi
 import kotlinx.datetime.LocalDate
 import org.redisson.Redisson
 import org.redisson.api.RedissonReactiveClient
-import kotlin.properties.Delegates
+import java.nio.charset.Charset
+import java.nio.file.Path
 import kotlin.reflect.full.primaryConstructor
 import org.redisson.config.Config as RedissonConfig
 
@@ -22,13 +24,11 @@ lateinit var redisson: RedissonReactiveClient
 suspend fun main() {
     Config.useEnvFile()
     redisson = Redisson.create(RedissonConfig().apply {
-        useSingleServer().address = "redis://localhost:6379"
+        useSingleServer().address = Config["REDIS_ADDRESS"]
     }).reactive()
 
     /**
-     * TODO: fix company name is id and not name in skrape
      * TODO: order, filter, refresh
-     * TODO: fix arrival and departure shouldn't be time but the date lol
      */
 
     Server(
@@ -45,6 +45,18 @@ suspend fun main() {
 
         before<CorsHandler>()
 
+        assets("/", AssetsHandler(Path.of("/web"), useIndexForUnknownPaths = true))
+        context("/bookUrls") {
+            get {
+                val path = this.queryParams["url"]?.base64Decode()?.toString(Charset.defaultCharset()) ?: error("gay")
+
+                require(path.contains("book/b.php")) { "gay" }
+
+                "https://www.azair.eu/$path".httpGet().body.byteStream().transferTo(startResponse(StatusCode.OK, contentType = "text/html"))
+                null
+            }
+        }
+
         context("/api") {
             useOnly<JsonBody>()
 
@@ -56,7 +68,7 @@ suspend fun main() {
     }.start()
 }
 
-fun Server.converters() {
+fun converters() {
     Converter.use<List<String>> {
         it.split(",")
     }

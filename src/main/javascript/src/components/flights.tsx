@@ -10,6 +10,7 @@ import papera from "@/assets/papera.json"
 import aereoVola from "@/assets/aereo-vola.json"
 import {Popover, PopoverContent, PopoverTrigger} from "@/components/ui/popover.tsx";
 import {lottieOptions} from "@/lib/utils.ts";
+import {Fragment} from "react";
 
 export default function Flights() {
     const {flights: result, isLoading} = useFlightsStore()
@@ -131,7 +132,25 @@ export function Flight({flight}: FlightProps) {
                 </div>
             </div>
 
-            <Button className="w-full">Book</Button>
+            <Popover>
+                <PopoverTrigger>
+                    <Button className="w-full">Book</Button>
+                </PopoverTrigger>
+                <PopoverContent>
+                    <div className={"flex flex-col gap-3"}>
+                        {flight.bookUrls.map((bookUrls, i) =>
+                            <Fragment key={i}>
+                                {bookUrls.urls.map((url, i) =>
+                                    <Button key={i} onClick={() => {
+                                        window.open(url, "__blank")
+                                    }}>
+                                        {bookUrls.name}
+                                    </Button>)}
+                            </Fragment>
+                        )}
+                    </div>
+                </PopoverContent>
+            </Popover>
         </CardContent>
     </Card>
 }

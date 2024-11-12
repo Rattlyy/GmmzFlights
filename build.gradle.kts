@@ -1,4 +1,3 @@
-import com.ryandens.jlink.tasks.JlinkJreTask
 import java.io.ByteArrayOutputStream
 
 plugins {
@@ -7,8 +6,6 @@ plugins {
 
     id("co.uzzu.dotenv.gradle") version "4.0.0"
     id("com.google.cloud.tools.jib") version "3.3.1"
-    id("com.ryandens.jlink-jib") version "0.4.1"
-    id("com.ryandens.temurin-binaries-repository") version "0.4.1"
     id("idea")
     application
 }
@@ -21,17 +18,6 @@ repositories {
     mavenCentral()
     maven("https://oss.sonatype.org/content/repositories/snapshots/")
     maven("https://jitpack.io")
-}
-
-val jdk by configurations.creating {
-    isCanBeResolved = true
-    isCanBeConsumed = false
-    isVisible = false
-}
-
-val copyJdks = tasks.register<Copy>("copyJdks") {
-    from(provider {tarTree(jdk.singleFile)})
-    into(project.layout.buildDirectory.dir("jdks"))
 }
 
 dependencies {
@@ -52,8 +38,6 @@ dependencies {
     implementation("org.apache.httpcomponents:httpclient:4.5.14")
     implementation("com.github.kittinunf.fuel:fuel:3.0.0-alpha03")
     implementation("com.fleeksoft.ksoup:ksoup-lite:0.1.9")
-
-    jdk("temurin19-binaries:OpenJDK19U-jdk_aarch64_linux_hotspot_19.0.2_7:jdk-19.0.2+7@tar.gz")
 }
 
 java {
@@ -66,32 +50,33 @@ application {
     mainClass.set("it.rattly.flights.MainKt")
 }
 
-jlinkJre {
-    compress = 2
-    noHeaderFiles = true
-    noManPages = true
-    stripDebug = true
-    modules = setOf(
-        "java.base",
-        "jdk.httpserver",
-        "java.sql",
-        "java.net.http",
-        "jdk.crypto.ec",
-        "java.naming",
-        "java.management"
-    )
+tasks.register<Exec>("runViteBuild") {
+    workingDir = layout.projectDirectory.dir("src/main/javascript").asFile
+    commandLine = listOf("bun", "run", "--bun", "build")
 }
+
+tasks.jib.get().dependsOn("runViteBuild")
 
 jib {
     from {
-        image = "gcr.io/distroless/java-base-debian11:nonroot-arm64"
+        image = "gcr.io/distroless/java21-debian12:latest-arm64"
+
         platforms {
             platform { os = "linux"; architecture = "arm64" }
+        }
+
+        extraDirectories {
+            paths {
+                path {
+                    setFrom("src/main/javascript/dist")
+                    into = "/web"
+                }
+            }
         }
     }
 
     to {
-        image = "ghcr.io/Rattlyy/FlightsLooker:latest"
+        image = "ghcr.io/rattlyy/gmmzflights:latest"
         auth {
             username = env.REGISTRY_USERNAME.value
             password = env.REGISTRY_PASSWORD.value
@@ -99,8 +84,8 @@ jib {
     }
 
     container {
+        mainClass = "it.rattly.flights.MainKt"
         jvmFlags = listOf("-Xss256K", "-XX:MaxRAMPercentage=80", "-XX:+ExitOnOutOfMemoryError")
-        ports = listOf("8080:8080")
     }
 }
 
