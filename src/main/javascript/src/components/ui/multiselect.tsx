@@ -23,7 +23,6 @@ import {
     CommandInput,
     CommandItem,
     CommandList,
-    CommandSeparator,
 } from "@/components/ui/command";
 
 /**
@@ -265,9 +264,12 @@ export const MultiSelect = React.forwardRef<
                     </Button>
                 </PopoverTrigger>
                 <PopoverContent
-                    className="w-auto p-0"
+                    className="w-auto p-0 touch-pan-up"
                     align="start"
                     onEscapeKeyDown={() => setIsPopoverOpen(false)}
+                    onWheel={(e) => {
+                        e.stopPropagation();
+                    }}
                 >
                     <Command>
                         <CommandInput
@@ -276,7 +278,7 @@ export const MultiSelect = React.forwardRef<
                         />
                         <CommandList>
                             <CommandEmpty>No results found.</CommandEmpty>
-                            <CommandGroup>
+                            <CommandGroup className={"touch-pan-up"}>
                                 {options.map((option) => {
                                     const isSelected = selectedValues.includes(option.value);
                                     return (
@@ -302,31 +304,6 @@ export const MultiSelect = React.forwardRef<
                                         </CommandItem>
                                     );
                                 })}
-                            </CommandGroup>
-                            <CommandSeparator />
-                            <CommandGroup>
-                                <div className="flex items-center justify-between">
-                                    {selectedValues.length > 0 && (
-                                        <>
-                                            <CommandItem
-                                                onSelect={handleClear}
-                                                className="flex-1 justify-center cursor-pointer"
-                                            >
-                                                Clear
-                                            </CommandItem>
-                                            <Separator
-                                                orientation="vertical"
-                                                className="flex min-h-6 h-full"
-                                            />
-                                        </>
-                                    )}
-                                    <CommandItem
-                                        onSelect={() => setIsPopoverOpen(false)}
-                                        className="flex-1 justify-center cursor-pointer max-w-full"
-                                    >
-                                        Close
-                                    </CommandItem>
-                                </div>
                             </CommandGroup>
                         </CommandList>
                     </Command>

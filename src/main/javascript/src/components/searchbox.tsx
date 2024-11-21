@@ -19,11 +19,10 @@ import {
     FormLabel,
     FormMessage
 } from "@/components/ui/form.tsx";
+import {addYears} from "date-fns";
 
 export function SearchBox() {
     const {isLoading: isInFlight, setIsLoading: setIsInFlight, setFlights} = useFlightsStore()
-    const nextYear = new Date()
-    nextYear.setFullYear(nextYear.getFullYear() + 1)
 
     const formSchema = z.object({
         sourceAirports: z.array(z.string()).min(1, "Provide atleast 1 airport."),
@@ -34,8 +33,8 @@ export function SearchBox() {
         everywhere: z.boolean(),
         direct: z.boolean(),
         dateRange: z.object({
-            startDate: z.date(),
-            endDate: z.date()
+            from: z.date(),
+            to: z.date()
         })
     }) //TODO: validates
 
@@ -45,11 +44,10 @@ export function SearchBox() {
     )
 
     const airportCodes = () => (airports == undefined ? [] : airports).map(e => e.code)
-
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
         defaultValues: {
-            dateRange: {startDate: new Date(), endDate: nextYear},
+            dateRange: {from: new Date(), to: addYears(new Date(), 1)},
             sourceAirports: [],
             destinationAirports: [],
             adults: 1,
@@ -80,8 +78,8 @@ export function SearchBox() {
                     sourceAirports: values.sourceAirports.join(","),
                     //@ts-expect-error codegen rotto
                     destinationAirports: values.destinationAirports.join(","),
-                    startDate: values.dateRange.startDate.toISOString(),
-                    endDate: values.dateRange.endDate.toISOString(),
+                    startDate: values.dateRange.from.toISOString(),
+                    endDate: values.dateRange.to.toISOString(),
                     dateRange: undefined
                 }
             }
