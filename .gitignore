@@ -45,3 +45,7 @@ bin/
 /src/main/javascript/src/api/v1.d.ts
 /src/main/javascript/src/api/zod.ts
 /src/main/javascript/openapi
+/caches/airports.json
+/.idea/git_toolbox_prj.xml
+/src/main/javascript/tsconfig.app.tsbuildinfo
+/src/main/javascript/tsconfig.node.tsbuildinfo
