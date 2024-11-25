@@ -1,5 +1,5 @@
 import {useDisplayStore, useFlightsStore} from "../state.tsx";
-import {Trip} from "../api/types.ts";
+import {Icon, Trip} from "../api/types.ts";
 import {$api} from "../api/api.ts";
 import {Card, CardContent} from "@/components/ui/card.tsx";
 import {Calendar, Clock, PlaneLanding, PlaneTakeoff} from "lucide-react";
@@ -16,6 +16,11 @@ import {compareAsc, format, parseISO} from "date-fns";
 export default function Flights() {
     const {flights: result, isLoading} = useFlightsStore()
     const {filter, order} = useDisplayStore()
+    const {data: icons} = $api.useQuery(
+        "get",
+        "/icons"
+    )
+
     if (result == null || !result.ok || result.trips == null || isLoading) {
         return <div className={"w-full h-full flex flex-col items-center justify-center"}>
             <Lottie
@@ -45,6 +50,9 @@ export default function Flights() {
             case "date":
                 trips = result.trips.sort((a, b) => compareAsc(parseISO(a.hops[0].date.value$kotlinx_datetime), parseISO(b.hops[0].date.value$kotlinx_datetime)))
                 break
+            case "clear":
+                trips = result.trips
+                break
         }
     }
 
@@ -57,21 +65,17 @@ export default function Flights() {
 
     return <main className="flex-1 bg-muted/20 py-8">
         <div className="max-w-full pl-5 pr-5 mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {trips.map((flight, i) => <Flight key={i} flight={flight}/>)}
+            {trips.map((flight, i) => <Flight key={i} icons={icons} flight={flight}/>)}
         </div>
     </main>
 }
 
 interface FlightProps {
     flight: Trip
+    icons: Icon[] | undefined
 }
 
-export function Flight({flight}: FlightProps) {
-    const {data: icons} = $api.useQuery(
-        "get",
-        "/icons"
-    )
-
+export function Flight({flight, icons}: FlightProps) {
     return <Card>
         <CardContent className="flex flex-col gap-4 pt-8 pl-8 pr-8">
             {flight.hops.map(hop => <>

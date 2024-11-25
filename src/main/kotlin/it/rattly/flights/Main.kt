@@ -50,7 +50,7 @@ suspend fun main() {
     }).reactive()
 
     /**
-     * TODO: scrape next pages + pagination
+     * TODO: scrape next pages + pagination, asset versioning
      */
 
     Server(
