@@ -9,8 +9,11 @@ import it.rattly.flights.Flight
 import it.rattly.flights.Trip
 import it.rattly.flights.cacheable.impl.AirportCache
 import klite.base64Encode
+import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.format
+import kotlinx.datetime.format.DateTimeFormatBuilder
 import kotlinx.datetime.format.char
 import org.apache.http.client.utils.URIBuilder
 import kotlin.math.pow
@@ -76,7 +79,6 @@ suspend fun scrapeFlights(res: Element, airportCache: AirportCache) =
             val to = p.select(".to").first()!!
             val sourceAirportName = from.select(".code").first()!!.text().take(3)
             val destinationAirportName = to.select(".code").first()!!.text().take(3)
-            // todo: kotlinx.datetime
             val departureTime = from.text().split(" ")[1]
             val arrivalTime = to.text().split(" ")[0]
 
@@ -85,8 +87,12 @@ suspend fun scrapeFlights(res: Element, airportCache: AirportCache) =
             val iata = airline.classNames().last().replace("iata", "")
             val price = p.select(".legPrice").first()!!.text().replace("€", "").toDouble().round(2)
 
+            val format = LocalDate.Format {
+                dayOfMonth() ; char('/'); monthNumber(); char('/'); yearTwoDigits(2000)
+            }
+
             Flight(
-                date = date[pIndex],
+                date = format.parse(date[pIndex].split(" ")[1]),
                 sourceAirport = airportCache.code(sourceAirportName)!!,
                 destinationAirport = airportCache.code(destinationAirportName)!!,
                 departureTime = departureTime,

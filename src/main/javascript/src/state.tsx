@@ -10,6 +10,22 @@ interface FlightsStore {
     setIsLoading: (isLoading: boolean) => void
 }
 
+interface DisplayStore {
+    order: string | null
+    filter: string | null
+    setFilter: (filter: string) => void
+    setOrder: (filter: string) => void
+}
+
+export const useDisplayStore = create<DisplayStore>()(devtools(
+    (set) => ({
+        order: null,
+        filter: null,
+        setFilter: filter => set({filter: filter}),
+        setOrder: order => set({order: order})
+    })
+))
+
 export const useFlightsStore = create<FlightsStore>()(devtools(
     (set) => ({
         flights: null,

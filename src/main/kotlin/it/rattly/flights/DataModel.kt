@@ -1,9 +1,12 @@
 package it.rattly.flights
 
 import it.rattly.flights.cacheable.impl.SingleAirport
-import kotlinx.datetime.Instant
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.serializers.LocalDateIso8601Serializer
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.UseSerializers
 import kotlin.math.roundToInt
+
 
 @Serializable
 data class Icon(val code: String, val css: String)
@@ -38,7 +41,7 @@ data class Flight(
     val destinationAirport: SingleAirport,
     val departureTime: String,
     val arrivalTime: String,
-    val date: String,
+    val date: LocalDate, //TODO: fix serializer che piange dio cane dio porco value$kotlinx_datetime ok amo
     val duration: String,
     val price: Double,
     val company: String,
@@ -53,7 +56,7 @@ val PLACEHOLDER_TRIP = Trip(
         repeat(3) {
             add(
                 Flight(
-                    date = "2023-01-01",
+                    date = LocalDate.parse("2023-01-01T00:00:00"),
                     sourceAirport = SingleAirport("Anywhere", "XXX"),
                     destinationAirport = SingleAirport("Anywhere", "XXX"),
                     departureTime = "10:00",

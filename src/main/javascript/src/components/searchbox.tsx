@@ -85,6 +85,7 @@ export function SearchBox() {
             }
         }).then((res) => {
             const results = searchResultSchema.safeParse(res.data)
+            console.log(results)
             if (results.success) {
                 setFlights(results.data)
             } else {

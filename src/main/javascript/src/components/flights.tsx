@@ -1,4 +1,4 @@
-import {useFlightsStore} from "../state.tsx";
+import {useDisplayStore, useFlightsStore} from "../state.tsx";
 import {Trip} from "../api/types.ts";
 import {$api} from "../api/api.ts";
 import {Card, CardContent} from "@/components/ui/card.tsx";
@@ -11,13 +11,15 @@ import aereoVola from "@/assets/aereo-vola.json"
 import {Popover, PopoverContent, PopoverTrigger} from "@/components/ui/popover.tsx";
 import {lottieOptions} from "@/lib/utils.ts";
 import {Fragment} from "react";
+import {compareAsc, format, parseISO} from "date-fns";
 
 export default function Flights() {
     const {flights: result, isLoading} = useFlightsStore()
-    if (result == null || !result.ok || result.trips == null) {
+    const {filter, order} = useDisplayStore()
+    if (result == null || !result.ok || result.trips == null || isLoading) {
         return <div className={"w-full h-full flex flex-col items-center justify-center"}>
             <Lottie
-                options={lottieOptions(papera)}
+                options={isLoading ? lottieOptions(aereoVola) : lottieOptions(papera)}
                 isClickToPauseDisabled={true}
                 height={200}
                 width={200}
@@ -31,20 +33,31 @@ export default function Flights() {
         </div>
     }
 
-    if (isLoading) {
-        return <div className={"w-full h-full flex flex-col items-center justify-center"}>
-            <Lottie
-                options={lottieOptions(aereoVola)}
-                isClickToPauseDisabled={true}
-                height={200}
-                width={200}
-            />
-        </div>
+    let trips = result.trips
+    if (order != null) {
+        switch (order) {
+            case "price-desc":
+                trips = result.trips.sort((a, b) => b.totalPrice - a.totalPrice)
+                break
+            case "price-asc":
+                trips = result.trips.sort((a, b) => a.totalPrice - b.totalPrice)
+                break
+            case "date":
+                trips = result.trips.sort((a, b) => compareAsc(parseISO(a.hops[0].date.value$kotlinx_datetime), parseISO(b.hops[0].date.value$kotlinx_datetime)))
+                break
+        }
+    }
+
+    if (filter != null) {
+        trips = trips.filter(flight => flight.hops.some(hop =>
+            hop.sourceAirport.name.toLowerCase().includes(filter.toLowerCase()) ||
+            hop.destinationAirport.name.toLowerCase().includes(filter.toLowerCase())
+        ))
     }
 
     return <main className="flex-1 bg-muted/20 py-8">
         <div className="max-w-full pl-5 pr-5 mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {result.trips.map((flight, i) => <Flight key={i} flight={flight}/>)}
+            {trips.map((flight, i) => <Flight key={i} flight={flight}/>)}
         </div>
     </main>
 }
@@ -91,7 +104,8 @@ export function Flight({flight}: FlightProps) {
                             <div className="text-sm text-muted-foreground">Date</div>
                             <div className="flex items-center gap-1">
                                 <Calendar className="w-5 h-5 self-center justify-self-center"/>
-                                <div className="font-medium">{hop.date}</div>
+                                <div
+                                    className="font-medium">{format(parseISO(hop.date.value$kotlinx_datetime), "dd/MM/yyyy")}</div>
                             </div>
                         </div>
                     </div>

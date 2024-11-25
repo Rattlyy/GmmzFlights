@@ -1,8 +1,8 @@
 import java.io.ByteArrayOutputStream
 
 plugins {
-    kotlin("jvm") version "2.0.20"
-    kotlin("plugin.serialization") version "2.0.20"
+    kotlin("jvm") version "2.0.21"
+    kotlin("plugin.serialization") version "2.0.21"
 
     id("co.uzzu.dotenv.gradle") version "4.0.0"
     id("com.google.cloud.tools.jib") version "3.3.1"
@@ -37,7 +37,9 @@ dependencies {
 
     implementation("org.apache.httpcomponents:httpclient:4.5.14")
     implementation("com.github.kittinunf.fuel:fuel:3.0.0-alpha03")
+    implementation("com.nimbusds:nimbus-jose-jwt:9.47")
     implementation("com.fleeksoft.ksoup:ksoup-lite:0.1.9")
+    implementation("org.postgresql:postgresql:42.7.4")
 }
 
 java {

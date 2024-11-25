@@ -1,5 +1,6 @@
 import {clsx, type ClassValue} from "clsx"
 import {twMerge} from "tailwind-merge"
+import {Options} from "react-lottie";
 
 export function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs))
@@ -18,5 +19,5 @@ export function lottieOptions(data: any) {
         rendererSettings: {
             preserveAspectRatio: "xMidYMid slice"
         }
-    }
+    } as Options
 }
