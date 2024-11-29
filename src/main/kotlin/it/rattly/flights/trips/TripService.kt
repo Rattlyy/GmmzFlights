@@ -3,10 +3,10 @@ package it.rattly.flights.trips
 import com.fleeksoft.ksoup.Ksoup
 import com.fleeksoft.ksoup.nodes.Element
 import fuel.httpGet
-import it.rattly.flights.AirportQuery
-import it.rattly.flights.BookUrl
-import it.rattly.flights.Flight
-import it.rattly.flights.Trip
+import it.rattly.flights.trips.AirportQuery
+import it.rattly.flights.trips.BookUrl
+import it.rattly.flights.trips.Flight
+import it.rattly.flights.trips.Trip
 import it.rattly.flights.cacheable.impl.AirportCache
 import klite.base64Encode
 import kotlinx.datetime.Instant

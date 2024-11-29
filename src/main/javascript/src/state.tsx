@@ -1,12 +1,12 @@
 import type {} from '@redux-devtools/extension'
 import {create} from "zustand";
-import {SearchResult} from "./api/types.ts";
+import {Trip} from "./api/types.ts";
 import {devtools} from "zustand/middleware";
 
 interface FlightsStore {
-    flights: SearchResult | null;
+    flights: Trip[] | null;
     isLoading: boolean
-    setFlights: (trips: SearchResult) => void
+    setFlights: (trips: Trip[]) => void
     setIsLoading: (isLoading: boolean) => void
 }
 

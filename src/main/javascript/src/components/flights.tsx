@@ -21,7 +21,7 @@ export default function Flights() {
         "/icons"
     )
 
-    if (result == null || !result.ok || result.trips == null || isLoading) {
+    if (result == null || isLoading) {
         return <div className={"w-full h-full flex flex-col items-center justify-center"}>
             <Lottie
                 options={isLoading ? lottieOptions(aereoVola) : lottieOptions(papera)}
@@ -38,20 +38,20 @@ export default function Flights() {
         </div>
     }
 
-    let trips = result.trips
+    let trips = result
     if (order != null) {
         switch (order) {
             case "price-desc":
-                trips = result.trips.sort((a, b) => b.totalPrice - a.totalPrice)
+                trips = result.sort((a, b) => b.totalPrice - a.totalPrice)
                 break
             case "price-asc":
-                trips = result.trips.sort((a, b) => a.totalPrice - b.totalPrice)
+                trips = result.sort((a, b) => a.totalPrice - b.totalPrice)
                 break
             case "date":
-                trips = result.trips.sort((a, b) => compareAsc(parseISO(a.hops[0].date.value$kotlinx_datetime), parseISO(b.hops[0].date.value$kotlinx_datetime)))
+                trips = result.sort((a, b) => compareAsc(parseISO(a.hops[0].date), parseISO(b.hops[0].date)))
                 break
             case "clear":
-                trips = result.trips
+                trips = result
                 break
         }
     }
@@ -109,7 +109,7 @@ export function Flight({flight, icons}: FlightProps) {
                             <div className="flex items-center gap-1">
                                 <Calendar className="w-5 h-5 self-center justify-self-center"/>
                                 <div
-                                    className="font-medium">{format(parseISO(hop.date.value$kotlinx_datetime), "dd/MM/yyyy")}</div>
+                                    className="font-medium">{format(parseISO(hop.date), "dd/MM/yyyy")}</div>
                             </div>
                         </div>
                     </div>

@@ -8,11 +8,13 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "openapi": "openapi-typescript openapi -o ./src/api/v1.d.ts",
-    "zod": "ts-to-zod src/api/types.ts src/api/zod.ts"
+    "openapi": "openapi-typescript http://localhost:8080/api/openapi -o ./src/api/slashapi.d.ts && openapi-typescript http://localhost:8080/private/openapi -o ./src/api/private.d.ts",
+    "zod": "ts-to-zod src/api/types.ts src/api/zod.ts",
+    "all": "bun run openapi && bun run zod"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.1",
+    "@icons-pack/react-simple-icons": "^10.2.0",
     "@logto/react": "^3.0.16",
     "@marsidev/react-turnstile": "^1.0.2",
     "@radix-ui/react-avatar": "^1.1.1",
@@ -37,6 +39,7 @@
     "date-fns": "^4.1.0",
     "lucide-react": "^0.456.0",
     "md5": "^2.3.0",
+    "next-themes": "^0.4.3",
     "openapi-fetch": "^0.13.0",
     "openapi-react-query": "^0.2.4",
     "react": "^18.3.1",
@@ -46,6 +49,7 @@
     "react-lottie": "^1.2.4",
     "react-router-dom": "^6.28.0",
     "recharts": "2",
+    "sonner": "^1.7.0",
     "tailwind-merge": "^2.5.4",
     "tailwindcss-animate": "^1.0.7",
     "vaul": "^1.1.1",

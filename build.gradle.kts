@@ -6,6 +6,8 @@ plugins {
 
     id("co.uzzu.dotenv.gradle") version "4.0.0"
     id("com.google.cloud.tools.jib") version "3.3.1"
+    id("com.google.devtools.ksp") version "2.0.21-1.0.28"
+    id("eu.vendeli.telegram-bot") version "7.5.0"
     id("idea")
     application
 }
@@ -21,20 +23,19 @@ repositories {
 }
 
 dependencies {
-    val kliteVersion = "1.6.9"
+    val kliteVersion = "master-SNAPSHOT"//"1.6.9"
     implementation("com.github.codeborne.klite:klite-server:$kliteVersion")
     implementation("com.github.codeborne.klite:klite-jdbc:$kliteVersion")
     implementation("com.github.codeborne.klite:klite-jackson:$kliteVersion")
     implementation("com.github.codeborne.klite:klite-json:$kliteVersion")
     implementation("com.github.codeborne.klite:klite-jobs:$kliteVersion")
     implementation("com.github.codeborne.klite:klite-openapi:$kliteVersion")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-rx2:1.9.0")
 
-    implementation("com.github.kittinunf.fuel:fuel:2.+")
-    implementation("org.redisson:redisson:3.32.0")
     implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.6.0-RC.2")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:+")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-rx2:1.9.0")
 
+    implementation("org.redisson:redisson:3.32.0")
     implementation("org.apache.httpcomponents:httpclient:4.5.14")
     implementation("com.github.kittinunf.fuel:fuel:3.0.0-alpha03")
     implementation("com.nimbusds:nimbus-jose-jwt:9.47")
@@ -97,6 +98,7 @@ tasks.register<JavaExec>("types.ts") {
     classpath = sourceSets.main.get().runtimeClasspath
     args("${layout.buildDirectory.get()}/classes/kotlin/main")
     standardOutput = ByteArrayOutputStream()
+    println(sourceSets.main.get().runtimeClasspath.forEach { println(it) })
     doLast {
         layout.projectDirectory.file("src/main/javascript/src/api/types.ts").asFile.writeText(standardOutput.toString())
     }

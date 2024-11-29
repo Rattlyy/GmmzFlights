@@ -12,6 +12,7 @@ import {
     RouterProvider,
 } from "react-router-dom";
 import {Callback} from "@/callback.tsx";
+import {Toaster} from "@/components/ui/sonner.tsx";
 
 const config: LogtoConfig = {
     endpoint: 'https://auth.gmmz.dev/',
@@ -24,6 +25,7 @@ const config: LogtoConfig = {
         UserScope.Identities,
         UserScope.Organizations,
     ],
+    resources: ["https://flights.gmmz.dev/private"]
 };
 
 const router = createBrowserRouter([
@@ -38,6 +40,7 @@ createRoot(document.getElementById('root')!).render(
                 <ReactQueryDevtools initialIsOpen={false}/>
                 <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
                     <RouterProvider router={router}/>
+                    <Toaster />
                 </ThemeProvider>
             </QueryClientProvider>
         </LogtoProvider>

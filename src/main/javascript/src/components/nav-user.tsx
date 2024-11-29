@@ -27,6 +27,10 @@ import {useLogto, UserInfoResponse} from "@logto/react";
 import {baseUrl} from "@/lib/utils.ts";
 import {useEffect, useState} from "react";
 import md5 from "md5";
+import {SiTelegram} from "@icons-pack/react-simple-icons";
+import {privateClient} from "@/api/api.ts";
+import {z} from "zod";
+import {toast} from "sonner";
 
 type User = {
     name: string,
@@ -37,8 +41,9 @@ type User = {
 export function NavUser() {
 
     const {isMobile} = useSidebar()
-    const {signIn, signOut, isAuthenticated, fetchUserInfo} = useLogto();
+    const {signIn, signOut, isAuthenticated, fetchUserInfo, getAccessToken} = useLogto();
     const [infoResponse, setInfoResponse] = useState<UserInfoResponse>();
+    const [accessToken, setAccessToken] = useState<string>();
     const user: User =
         infoResponse ? {
             name: infoResponse.name ? infoResponse.name : "No name...",
@@ -48,7 +53,7 @@ export function NavUser() {
         } : {
             name: "Login",
             email: "Unlock advanced features",
-            avatar: "/avatars/shadcn.jpg",
+            avatar: "/default.jpg",
         }
 
     useEffect(() => {
@@ -59,6 +64,14 @@ export function NavUser() {
             }
         })();
     }, [fetchUserInfo, isAuthenticated]);
+
+    useEffect(() => {
+        (async () => {
+            if (isAuthenticated) {
+                setAccessToken(await getAccessToken("https://flights.gmmz.dev/private"));
+            }
+        })();
+    }, [getAccessToken, isAuthenticated]);
 
     return (
         <SidebarMenu>
@@ -100,6 +113,14 @@ export function NavUser() {
                         </DropdownMenuLabel>
                         <DropdownMenuSeparator/>
                         <DropdownMenuGroup>
+                            {isAuthenticated ? <>
+                                <DropdownMenuItem
+                                    onClick={() => accessToken ? telegramAuth(accessToken) : null}>
+                                    <SiTelegram/>
+                                    Connect to Telegram
+                                </DropdownMenuItem>
+                            </> : null}
+
                             <DropdownMenuItem
                                 onClick={() => !isAuthenticated ? signIn(baseUrl('auth')) : signOut(baseUrl(''))}>
                                 <Sparkles/>
@@ -111,4 +132,27 @@ export function NavUser() {
             </SidebarMenuItem>
         </SidebarMenu>
     )
+}
+
+function telegramAuth(accessToken: string) {
+    (async () => {
+        const stringSuccess = z.object({
+            data: z.string()
+        })
+
+        const authKey = await stringSuccess.safeParseAsync(
+            (await privateClient.GET("/telegram/code", {
+                    headers: {
+                        authentication: `Bearer ${accessToken}`
+                    }
+                })
+            ).data);
+
+
+        if (authKey.success)
+            window.open(`https://t.me/gmmzdevbot?start=${authKey.data.data}`, "_blank")
+        else toast("Error", {
+            description: "Error requesting Telegram Key"
+        })
+    })()
 }

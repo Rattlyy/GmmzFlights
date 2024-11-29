@@ -2,7 +2,7 @@ import {$api, apiClient} from "../api/api.ts";
 import {PlaneLanding, PlaneTakeoff} from "lucide-react";
 import {useFlightsStore} from "../state.tsx";
 import React, {useEffect, useMemo} from "react";
-import {searchResultSchema} from "../api/zod.ts";
+import {responseErrorSchema, tripSchema} from "../api/zod.ts";
 import {Button} from "@/components/ui/button.tsx";
 import {z} from "zod";
 import {useForm} from "react-hook-form";
@@ -20,6 +20,7 @@ import {
     FormMessage
 } from "@/components/ui/form.tsx";
 import {addYears} from "date-fns";
+import {toast} from "sonner";
 
 export function SearchBox() {
     const {isLoading: isInFlight, setIsLoading: setIsInFlight, setFlights} = useFlightsStore()
@@ -36,7 +37,7 @@ export function SearchBox() {
             from: z.date(),
             to: z.date()
         })
-    }) //TODO: validates
+    }).refine(e => e.dateRange.to > e.dateRange.from, "End date must be greater than start date")
 
     const {isLoading, data: airports, /*isError TODO*/} = $api.useQuery(
         "get",
@@ -84,13 +85,28 @@ export function SearchBox() {
                 }
             }
         }).then((res) => {
-            const results = searchResultSchema.safeParse(res.data)
-            console.log(results)
-            if (results.success) {
-                setFlights(results.data)
-            } else {
-                //TODO: HANDLE ERRORS PORCA MADONNA
-            }
+            const flightResultSchema = z.object({
+                data: z.array(tripSchema)
+            })
+
+            flightResultSchema.safeParseAsync(res.data).then(results => {
+                console.log(results)
+                if (results.success) {
+                    setFlights(results.data.data)
+                } else {
+                    responseErrorSchema.safeParseAsync(res.data).then(error => {
+                        if (error.success) {
+                            toast("Search error", {
+                                description: error.data.error
+                            })
+                        } else {
+                            toast("Search error", {
+                                description: "Search is currently unavailable. Contact @Rattly on Telegram."
+                            })
+                        }
+                    })
+                }
+            })
         }).catch((e) => {
             console.log(e)
         }).finally(() => {

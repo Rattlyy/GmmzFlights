@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonGenerator
 import com.fasterxml.jackson.databind.JsonSerializer
 import com.fasterxml.jackson.databind.SerializerProvider
 import com.fasterxml.jackson.databind.module.SimpleModule
+import com.fasterxml.jackson.module.kotlin.convertValue
 import com.nimbusds.jose.JOSEObjectType
 import com.nimbusds.jose.JWSAlgorithm
 import com.nimbusds.jose.jwk.source.JWKSourceBuilder
@@ -17,58 +18,66 @@ import com.nimbusds.jwt.proc.DefaultJWTClaimsVerifier
 import com.nimbusds.jwt.proc.DefaultJWTProcessor
 import fuel.httpGet
 import io.swagger.v3.oas.annotations.enums.ParameterIn
+import it.rattly.flights.Response.Success
 import it.rattly.flights.cacheable.CacheRoutes
 import it.rattly.flights.cacheable.impl.AirportCache
 import it.rattly.flights.cacheable.impl.IconCache
 import it.rattly.flights.trips.TripRoutes
 import it.rattly.flights.trips.TripService
+import it.rattly.flights.users.JWTData
+import it.rattly.flights.users.UserRoutes
+import it.rattly.flights.users.UsersRepository
 import klite.*
 import klite.annotations.annotated
 import klite.jackson.JsonBody
 import klite.jackson.kliteJsonMapper
 import klite.jdbc.DBMigrator
 import klite.jdbc.DBModule
+import klite.jdbc.RequestTransactionHandler
 import klite.openapi.openApi
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
+import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
+import kotlinx.datetime.format
 import org.redisson.Redisson
+import org.redisson.api.RedissonClient
 import org.redisson.api.RedissonReactiveClient
 import java.net.URI
 import java.nio.charset.Charset
 import java.nio.file.Path
 import java.text.ParseException
+import javax.sql.DataSource
 import kotlin.io.encoding.ExperimentalEncodingApi
 import kotlin.reflect.full.primaryConstructor
 import org.redisson.config.Config as RedissonConfig
 
-lateinit var redisson: RedissonReactiveClient
+lateinit var redisson: RedissonClient
+lateinit var server: Server
 
 @OptIn(ExperimentalEncodingApi::class)
 suspend fun main() {
     Config.useEnvFile()
     redisson = Redisson.create(RedissonConfig().apply {
         useSingleServer().address = Config["REDIS_ADDRESS"]
-    }).reactive()
+    })
 
     /**
      * TODO: scrape next pages + pagination, asset versioning
      */
 
-    Server(
+    server = Server(
         requestIdGenerator = XRequestIdGenerator(),
         httpExchangeCreator = XForwardedHttpExchange::class.primaryConstructor!!
     ).apply {
-        //TODO: hotfix, wait for fix
         val jackson = kliteJsonMapper {
-            this.addModules(SimpleModule(
-                "enum hotfix"
-            ).addSerializer<ParameterIn>(ParameterIn::class.java,
-                object : JsonSerializer<ParameterIn>() {
-                    override fun serialize(
-                        value: ParameterIn,
-                        gen: JsonGenerator,
-                        serializers: SerializerProvider
-                    ) {
-                        gen.writeString(value.toString().lowercase())
+            addModule(SimpleModule("instant").addSerializer(
+                object : JsonSerializer<LocalDate>() {
+                    override fun handledType() = LocalDate::class.java
+                    override fun serialize(value: LocalDate, gen: JsonGenerator, serializers: SerializerProvider) {
+                        gen.writeString(value.format(LocalDate.Formats.ISO))
                     }
                 }
             ))
@@ -77,13 +86,28 @@ suspend fun main() {
         converters()
         use<DBModule>()
         use<DBMigrator>()
+        use<RequestTransactionHandler>()
         use(JsonBody(jackson))
 
-        register(AirportCache().also { it.init(this) })
-        register(IconCache().also { it.init(this) })
-        register(TripService(require<AirportCache>()))
+        register(this)
+        register<AirportCache>()
+        register<IconCache>()
+        register<TripService>()
+        register<UsersRepository>()
+
+        // Bot TG
+        CoroutineScope(Dispatchers.Default + SupervisorJob()).launch {
+            bot.handleUpdates()
+        }
 
         before<CorsHandler>()
+
+        errors.on<Exception> {
+            ErrorResponse(
+                statusCode = (it as? StatusCodeException)?.statusCode ?: StatusCode.InternalServerError,
+                message = jackson.convertValue(Response.Error(NoStackTraceException(it.message, it).message.toString()))
+            )
+        }
 
         assets("/", AssetsHandler(Path.of("/web"), useIndexForUnknownPaths = true))
         context("/bookUrls") {
@@ -108,7 +132,7 @@ suspend fun main() {
         }
 
         val processor = DefaultJWTProcessor<SecurityContext>().apply {
-            jwsTypeVerifier = DefaultJOSEObjectTypeVerifier(JOSEObjectType.JWT)
+            jwsTypeVerifier = DefaultJOSEObjectTypeVerifier(JOSEObjectType("at+jwt"), JOSEObjectType.JWT)
             jwsKeySelector = JWSVerificationKeySelector(
                 JWSAlgorithm.ES384,
                 JWKSourceBuilder.create<SecurityContext>(URI("https://auth.gmmz.dev/oidc/jwks").toURL())
@@ -117,7 +141,11 @@ suspend fun main() {
             )
 
             jwtClaimsSetVerifier = DefaultJWTClaimsVerifier(
-                JWTClaimsSet.Builder().issuer("https://auth.gmmz.dev/oidc").audience("https://flights.gmmz.dev/private").build(),
+                JWTClaimsSet.Builder()
+                    .issuer("https://auth.gmmz.dev/oidc")
+                    .audience("https://flights.gmmz.dev/private")
+                    .build(),
+
                 setOf(
                     JWTClaimNames.SUBJECT,
                     JWTClaimNames.ISSUED_AT,
@@ -129,6 +157,8 @@ suspend fun main() {
 
 
         context("/private") {
+            useOnly<JsonBody>()
+            openApi()
             before {
                 val token = (it.header("Authentication") ?: throw StatusCodeException(
                     StatusCode.Forbidden,
@@ -140,7 +170,10 @@ suspend fun main() {
                     "jwt",
 
                     try {
-                        processor.process(token, null).toPayload()
+                        jackson.convertValue<JWTData>(
+                            processor.process(token, null).toJSONObject(),
+                            JWTData::class.java
+                        )
                     } catch (e: Exception) {
                         if (e is ParseException || e is BadJOSEException) {
                             throw StatusCodeException(StatusCode.Forbidden, "Invalid JWT.")
@@ -154,8 +187,15 @@ suspend fun main() {
             get("/") {
                 return@get attr("jwt")
             }
+
+            annotated<UserRoutes>()
         }
-    }.start()
+    }.also { it.start() }
+}
+
+sealed class Response<T>(ok: Boolean) {
+    data class Success<T>(val data: T) : Response<T>(true)
+    data class Error(val error: String) : Response<String>(false)
 }
 
 fun converters() {

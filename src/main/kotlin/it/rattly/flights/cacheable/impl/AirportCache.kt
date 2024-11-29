@@ -2,11 +2,12 @@ package it.rattly.flights.cacheable.impl
 
 import it.rattly.flights.cacheable.ItemCache
 import fuel.httpGet
+import klite.Server
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 
-class AirportCache : ItemCache<SingleAirport>("airports", SingleAirport::class) {
+class AirportCache(server: Server) : ItemCache<SingleAirport>("airports", SingleAirport::class, server) {
     suspend fun code(code: String) = all().find { it.code == code }
 
     override suspend fun all() = super.all()

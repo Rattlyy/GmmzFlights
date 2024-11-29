@@ -1,9 +1,10 @@
 package it.rattly.flights.trips
 
 import fuel.httpGet
-import it.rattly.flights.AirportQuery
-import it.rattly.flights.PLACEHOLDER_TRIP
-import it.rattly.flights.Trip
+import it.rattly.flights.Response
+import it.rattly.flights.trips.AirportQuery
+import it.rattly.flights.trips.PLACEHOLDER_TRIP
+import it.rattly.flights.trips.Trip
 import it.rattly.flights.cacheable.impl.AirportCache
 import it.rattly.flights.cacheable.impl.SingleAirport
 import it.rattly.flights.redisson
@@ -21,8 +22,8 @@ import kotlin.time.toJavaDuration
 
 @Suppress("unused")
 class TripRoutes(private val tripService: TripService, private val airportCache: AirportCache) {
-    private val cache: RLocalCachedMapReactive<Int, SearchResult> = redisson.getLocalCachedMap(
-        name<Int, SearchResult>("tripsCache").maxIdle(10.minutes.toJavaDuration())
+    private val cache: RLocalCachedMapReactive<Int, List<Trip>> = redisson.reactive().getLocalCachedMap(
+        name<Int, List<Trip>>("trips").maxIdle(10.minutes.toJavaDuration())
     )
 
     @GET("/mockFlights")
@@ -46,7 +47,7 @@ class TripRoutes(private val tripService: TripService, private val airportCache:
         @QueryParam("endDate") endDate: LocalDate,
         @QueryParam("everywhere") everywhere: Boolean = false,
         @QueryParam("direct") direct: Boolean = false,
-    ): SearchResult {
+    ): Response<List<Trip>> {
         require(startDate < endDate) { "Start date must be before end date." }
         require(adults >= 0) { "Adults must be a positive number." }
         require(children >= 0) { "Children must be a positive number." }
@@ -75,7 +76,7 @@ class TripRoutes(private val tripService: TripService, private val airportCache:
         ).sumOf { it.hashCode() }
 
         return if (cache.containsKey(cacheKey).awaitSingle())
-            cache.get(cacheKey).awaitSingle().also { println("[$cacheKey] HIT") }
+            Response.Success(cache.get(cacheKey).awaitSingle().also { println("[$cacheKey] HIT") })
         else tripService.fetchTrips(
             AirportQuery(
                 sourceAirports.first().name,
@@ -96,31 +97,8 @@ class TripRoutes(private val tripService: TripService, private val airportCache:
             endDate,
             direct
         ).fold(
-            onSuccess = {
-                SearchResult(
-                    ok = true,
-                    trips = it,
-                    generationTime = System.currentTimeMillis()
-                )
-            },
-
-            onFailure = {
-                SearchResult(
-                    ok = false,
-                    failReason = it.message,
-                    generationTime = System.currentTimeMillis()
-                )
-            }
-        ).also {
-            println("[$cacheKey] MISS")
-            cache.put(cacheKey, it).subscribe()
-        }
+            onSuccess = { println("[$cacheKey] MISS"); cache.put(cacheKey, it).subscribe(); Response.Success(it) },
+            onFailure = { throw it }
+        ) //TODO: handle nothing found
     }
 }
-
-data class SearchResult(
-    val ok: Boolean,
-    val failReason: String? = null,
-    val trips: List<Trip>? = null,
-    val generationTime: Long
-)
