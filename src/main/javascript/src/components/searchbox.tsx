@@ -109,6 +109,9 @@ export function SearchBox() {
             })
         }).catch((e) => {
             console.log(e)
+            toast("Client error occurred", {
+                description: e,
+            })
         }).finally(() => {
             setIsInFlight(false)
         })
@@ -238,6 +241,7 @@ function AirportMultiSelect(props: AirportMultiSelectProps) {
                         onValueChange={field.onChange}
                         defaultValue={field.value}
                         placeholder={props.label}
+                        modalPopover={true}
                         variant="default"
                         animation={2}
                         maxCount={3}

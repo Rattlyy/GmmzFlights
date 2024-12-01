@@ -18,7 +18,7 @@ export function TopBar() {
     const {setOrder, setFilter} = useDisplayStore()
     const isMobile = useIsMobile()
     return <div className={"flex flex-row gap-3 p-2 h-16 border-b border-sidebar-border bg-sidebar items-center"}>
-        <SidebarTrigger className={"pl-2"}/>
+        <SidebarTrigger className={"pl-2 animate-pulse"}/>
         {flights ? <>
             <Select onValueChange={setOrder}>
                 <SelectTrigger className="pl-3 w-[180px]">

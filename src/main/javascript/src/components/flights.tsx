@@ -2,7 +2,7 @@ import {useDisplayStore, useFlightsStore} from "../state.tsx";
 import {Icon, Trip} from "../api/types.ts";
 import {$api} from "../api/api.ts";
 import {Card, CardContent} from "@/components/ui/card.tsx";
-import {Calendar, Clock, PlaneLanding, PlaneTakeoff} from "lucide-react";
+import {Calendar, Clock, MoveUp, PlaneLanding, PlaneTakeoff} from "lucide-react";
 import {Separator} from "@/components/ui/separator.tsx";
 import {Button} from "@/components/ui/button.tsx";
 import Lottie from 'react-lottie';
@@ -22,20 +22,25 @@ export default function Flights() {
     )
 
     if (result == null || isLoading) {
-        return <div className={"w-full h-full flex flex-col items-center justify-center"}>
-            <Lottie
-                options={isLoading ? lottieOptions(aereoVola) : lottieOptions(papera)}
-                isClickToPauseDisabled={true}
-                height={200}
-                width={200}
-            />
-
-            <div className={"flex flex-row items-center justify-center text-center pt-4"}>
-                <PlaneTakeoff/>
-                <h1 className={"pl-4 pr-4 text-xl text-muted-foreground "}>gmmz.dev // flights</h1>
-                <PlaneLanding/>
+        return <>
+            <div className={"flex flex-row items-start"}>
+                <MoveUp className={"animate-bounce"} size={50}/>
             </div>
-        </div>
+            <div className={"w-full h-full flex flex-col items-center justify-center"}>
+                <Lottie
+                    options={isLoading ? lottieOptions(aereoVola) : lottieOptions(papera)}
+                    isClickToPauseDisabled={true}
+                    height={200}
+                    width={200}
+                />
+
+                <div className={"flex flex-row items-center justify-center text-center pt-4"}>
+                    <PlaneTakeoff/>
+                    <h1 className={"pl-4 pr-4 text-xl text-muted-foreground "}>gmmz.dev // flights</h1>
+                    <PlaneLanding/>
+                </div>
+            </div>
+        </>
     }
 
     let trips = result
