@@ -1,4 +1,4 @@
-import {hydrateRoot} from 'react-dom/client'
+import {createRoot} from 'react-dom/client'
 import './index.css'
 
 import {ReactQueryDevtools} from '@tanstack/react-query-devtools'
@@ -33,8 +33,7 @@ const router = createBrowserRouter([
     {path: "/auth", element: <Callback />}
 ]);
 
-hydrateRoot(
-    document.getElementById('root')!,
+createRoot(document.getElementById('root')!).render(
     <StrictMode>
         <LogtoProvider config={config}>
             <QueryClientProvider client={new QueryClient()}>

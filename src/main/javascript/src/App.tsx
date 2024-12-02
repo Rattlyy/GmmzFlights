@@ -12,7 +12,7 @@ export function App() {
             <AppSidebar/>
             <SidebarInset>
                 <TopBar/>
-                <Flights/>
+                {!import.meta.env.SSR ? <Flights/> : null}
             </SidebarInset>
         </SidebarProvider>
     )

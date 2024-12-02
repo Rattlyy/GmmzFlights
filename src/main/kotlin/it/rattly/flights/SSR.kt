@@ -64,7 +64,7 @@ fun Server.ssr() {
     val rendered = ctx.eval("js", "window.renderFunc('/')").toString()
     val file = File(if (Config.isDev) "./src/main/javascript/dist/index.html" else "/web/index.html")
         .readLines()
-        .joinToString("").replace(
+        .joinToString("\n").replace(
             "<div id=\"root\"></div>",
             "<div id=\"root\" class=\"dark\">${rendered}</div>"
         )
@@ -77,5 +77,5 @@ fun Server.ssr() {
         it.send(StatusCode.OK, file, "text/html")
     }
 
-    assets("/", AssetsHandler(Path.of("./src/main/javascript/dist")))
+    assets("/", AssetsHandler(Path.of(if (Config.isDev) "./src/main/javascript/dist" else "/web/")))
 }

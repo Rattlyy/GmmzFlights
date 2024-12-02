@@ -10,7 +10,7 @@
     "openapi": "openapi-typescript http://localhost:8080/api/openapi -o ./src/api/slashapi.d.ts && openapi-typescript http://localhost:8080/private/openapi -o ./src/api/private.d.ts",
     "zod": "ts-to-zod src/api/types.ts src/api/zod.ts",
     "build": "tsc -b && vite build",
-    "build:all": "bun run build & bun run build:server",
+    "build:all": "bun run build && bun run build:server",
     "build:server": "vite build --outDir dist-server/ --ssr src/main-server.tsx && bun run build:bundleserver",
     "build:bundleserver": "esbuild dist-server/main-server.js --bundle --outfile=dist-server/bundle.js --platform=browser --target=es6",
     "all": "bun run openapi && bun run zod"

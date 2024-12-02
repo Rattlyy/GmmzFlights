@@ -9,9 +9,10 @@ import papera from "@/assets/papera.json"
 import aereoVola from "@/assets/aereo-vola.json"
 import {Popover, PopoverContent, PopoverTrigger} from "@/components/ui/popover.tsx";
 import {lottieOptions} from "@/lib/utils.ts";
-import {Fragment, useEffect, useState} from "react";
+import {Fragment} from "react";
 import {compareAsc, format, parseISO} from "date-fns";
 import {useIsMobile} from "@/hooks/use-mobile.tsx";
+import Lottie from "react-lottie"
 
 export default function Flights() {
     const isMobile = useIsMobile()
@@ -22,30 +23,18 @@ export default function Flights() {
         "/icons"
     )
 
-    // @ts-expect-error ssr
-    const {Lottie, setLottie} = useState(undefined)
-    if (!import.meta.env.SSR) {
-        // static condition
-        // eslint-disable-next-line react-hooks/rules-of-hooks
-        useEffect(() => {
-            (async () => {
-                setLottie(await import("react-lottie"))
-            })()
-        }, [setLottie]);
-    }
-
     if (result == null || isLoading) {
         return <>
             {isMobile ? <div className={"flex flex-row items-start"}>
                 <MoveUp className={"animate-bounce"} size={50}/>
             </div> : null}
             <div className={"w-full h-full flex flex-col items-center justify-center"}>
-                {Lottie ? <Lottie
+                <Lottie
                     options={isLoading ? lottieOptions(aereoVola) : lottieOptions(papera)}
                     isClickToPauseDisabled={true}
                     height={200}
                     width={200}
-                /> : null}
+                />
 
                 <div className={"flex flex-row items-center justify-center text-center pt-4"}>
                     <PlaneTakeoff/>

@@ -100,7 +100,7 @@ jib {
 
     container {
         mainClass = "it.rattly.flights.MainKt"
-        jvmFlags = listOf("-Xss256K", "-XX:MaxRAMPercentage=80", "-XX:+ExitOnOutOfMemoryError")
+        jvmFlags = listOf("-Xss2m", "-XX:MaxRAMPercentage=80", "-XX:+ExitOnOutOfMemoryError")
     }
 }
 
