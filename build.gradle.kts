@@ -41,6 +41,8 @@ dependencies {
     implementation("com.nimbusds:nimbus-jose-jwt:9.47")
     implementation("com.fleeksoft.ksoup:ksoup-lite:0.1.9")
     implementation("org.postgresql:postgresql:42.7.4")
+    implementation("org.graalvm.js:js:24.1.1")
+    implementation("org.graalvm.polyglot:polyglot:24.1.1")
 }
 
 java {
@@ -55,14 +57,14 @@ application {
 
 tasks.register<Exec>("runViteBuild") {
     workingDir = layout.projectDirectory.dir("src/main/javascript").asFile
-    commandLine = listOf("bun", "run", "--bun", "build")
+    commandLine = listOf("bun", "run", "--bun", "build:all")
 }
 
 tasks.jib.get().dependsOn("runViteBuild")
 
 jib {
     from {
-        image = "gcr.io/distroless/java21-debian12:latest-arm64"
+        image = "ghcr.io/graalvm/jdk-community:23"
 
         platforms {
             platform { os = "linux"; architecture = "arm64" }
@@ -73,6 +75,16 @@ jib {
                 path {
                     setFrom("src/main/javascript/dist")
                     into = "/web"
+                }
+
+                path {
+                    setFrom("src/main/javascript/dist-server")
+                    into = "/web"
+                }
+
+                path {
+                    setFrom("src/main/javascript/node_modules/text-encoding")
+                    into = "/web/node_modules/text-encoding"
                 }
             }
         }

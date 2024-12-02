@@ -15,7 +15,7 @@ export function AppSidebar({...props}: React.ComponentProps<typeof Sidebar>) {
     return (
         <Sidebar {...props}>
             <SidebarHeader className="h-16 border-b border-sidebar-border">
-                <NavUser />
+                {!import.meta.env.SSR ? <NavUser /> : null}
             </SidebarHeader>
             <SidebarContent>
                 <div className={"p-3"}>

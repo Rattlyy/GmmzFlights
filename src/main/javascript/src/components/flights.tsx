@@ -5,15 +5,16 @@ import {Card, CardContent} from "@/components/ui/card.tsx";
 import {Calendar, Clock, MoveUp, PlaneLanding, PlaneTakeoff} from "lucide-react";
 import {Separator} from "@/components/ui/separator.tsx";
 import {Button} from "@/components/ui/button.tsx";
-import Lottie from 'react-lottie';
 import papera from "@/assets/papera.json"
 import aereoVola from "@/assets/aereo-vola.json"
 import {Popover, PopoverContent, PopoverTrigger} from "@/components/ui/popover.tsx";
 import {lottieOptions} from "@/lib/utils.ts";
-import {Fragment} from "react";
+import {Fragment, useEffect, useState} from "react";
 import {compareAsc, format, parseISO} from "date-fns";
+import {useIsMobile} from "@/hooks/use-mobile.tsx";
 
 export default function Flights() {
+    const isMobile = useIsMobile()
     const {flights: result, isLoading} = useFlightsStore()
     const {filter, order} = useDisplayStore()
     const {data: icons} = $api.useQuery(
@@ -21,18 +22,30 @@ export default function Flights() {
         "/icons"
     )
 
+    // @ts-expect-error ssr
+    const {Lottie, setLottie} = useState(undefined)
+    if (!import.meta.env.SSR) {
+        // static condition
+        // eslint-disable-next-line react-hooks/rules-of-hooks
+        useEffect(() => {
+            (async () => {
+                setLottie(await import("react-lottie"))
+            })()
+        }, [setLottie]);
+    }
+
     if (result == null || isLoading) {
         return <>
-            <div className={"flex flex-row items-start"}>
+            {isMobile ? <div className={"flex flex-row items-start"}>
                 <MoveUp className={"animate-bounce"} size={50}/>
-            </div>
+            </div> : null}
             <div className={"w-full h-full flex flex-col items-center justify-center"}>
-                <Lottie
+                {Lottie ? <Lottie
                     options={isLoading ? lottieOptions(aereoVola) : lottieOptions(papera)}
                     isClickToPauseDisabled={true}
                     height={200}
                     width={200}
-                />
+                /> : null}
 
                 <div className={"flex flex-row items-center justify-center text-center pt-4"}>
                     <PlaneTakeoff/>

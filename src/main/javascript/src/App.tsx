@@ -17,4 +17,3 @@ export function App() {
         </SidebarProvider>
     )
 }
-

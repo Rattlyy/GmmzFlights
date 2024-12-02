@@ -18,17 +18,21 @@ val bot = TelegramBot(Config["TG_BOT_TOKEN"])
 @CommandHandler(["/start"])
 suspend fun startCommand(user: User, bot: TelegramBot, msg: MessageUpdate) {
     val usersRepository = server.require(UsersRepository::class)
+    val errorMsg = message("To access this bot, register on https://flights.gmmz.dev/ and link your account.")
+
+    if (msg.text == "/start") {
+        errorMsg.send(user, bot)
+        return
+    }
 
     usersRepository.save(
         usersRepository[
             usersRepository.tgCodeCache[Uuid.parse(msg.text.replace("/start ", ""))] ?: run {
-                message("To access this bot, register on https://flights.gmmz.dev/ and link your account.")
-                    .send(user, bot)
-
+                errorMsg.send(user, bot)
                 return
             }
         ]?.also { it.tgId = user.id } ?: run {
-            message("Invalid code sent. Please try again.").send(user, bot)
+            errorMsg.send(user, bot)
             return
         }
     )

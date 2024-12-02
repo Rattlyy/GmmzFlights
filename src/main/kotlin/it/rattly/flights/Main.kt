@@ -42,6 +42,10 @@ import kotlinx.coroutines.launch
 import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.format
+import okio.source
+import org.graalvm.polyglot.Context
+import org.graalvm.polyglot.Source
+import org.graalvm.polyglot.io.IOAccess
 import org.redisson.Redisson
 import org.redisson.api.RedissonClient
 import org.redisson.api.RedissonReactiveClient
@@ -51,147 +55,84 @@ import java.nio.file.Path
 import java.text.ParseException
 import javax.sql.DataSource
 import kotlin.io.encoding.ExperimentalEncodingApi
+import kotlin.io.path.Path
 import kotlin.reflect.full.primaryConstructor
 import org.redisson.config.Config as RedissonConfig
 
-lateinit var redisson: RedissonClient
 lateinit var server: Server
-
-@OptIn(ExperimentalEncodingApi::class)
-suspend fun main() {
+val redisson = Redisson.create(RedissonConfig().apply {
     Config.useEnvFile()
-    redisson = Redisson.create(RedissonConfig().apply {
-        useSingleServer().address = Config["REDIS_ADDRESS"]
-    })
+    useSingleServer().address = Config["REDIS_ADDRESS"]
+})
 
-    /**
-     * TODO: scrape next pages + pagination, asset versioning
-     */
-
-    server = Server(
-        requestIdGenerator = XRequestIdGenerator(),
-        httpExchangeCreator = XForwardedHttpExchange::class.primaryConstructor!!
-    ).apply {
-        val jackson = kliteJsonMapper {
-            addModule(SimpleModule("instant").addSerializer(
-                object : JsonSerializer<LocalDate>() {
-                    override fun handledType() = LocalDate::class.java
-                    override fun serialize(value: LocalDate, gen: JsonGenerator, serializers: SerializerProvider) {
-                        gen.writeString(value.format(LocalDate.Formats.ISO))
-                    }
-                }
-            ))
-        }
-
-        converters()
-        use<DBModule>()
-        use<DBMigrator>()
-        use<RequestTransactionHandler>()
-        use(JsonBody(jackson))
-
-        register(this)
-        register<AirportCache>()
-        register<IconCache>()
-        register<TripService>()
-        register<UsersRepository>()
-
-        // Bot TG
-        CoroutineScope(Dispatchers.Default + SupervisorJob()).launch {
-            bot.handleUpdates()
-        }
-
-        before<CorsHandler>()
-
-        errors.on<Exception> {
-            ErrorResponse(
-                statusCode = (it as? StatusCodeException)?.statusCode ?: StatusCode.InternalServerError,
-                message = jackson.convertValue(Response.Error(NoStackTraceException(it.message, it).message.toString()))
-            )
-        }
-
-        assets("/", AssetsHandler(Path.of("/web"), useIndexForUnknownPaths = true))
-        context("/bookUrls") {
-            get {
-                val path = this.queryParams["url"]?.base64Decode()?.toString(Charset.defaultCharset()) ?: error("gay")
-
-                require(path.contains("book/b.php")) { "gay" }
-
-                "https://www.azair.eu/$path".httpGet().body.byteStream()
-                    .transferTo(startResponse(StatusCode.OK, contentType = "text/html"))
-                null
+val jackson = kliteJsonMapper {
+    addModule(SimpleModule("instant").addSerializer(
+        object : JsonSerializer<LocalDate>() {
+            override fun handledType() = LocalDate::class.java
+            override fun serialize(value: LocalDate, gen: JsonGenerator, serializers: SerializerProvider) {
+                gen.writeString(value.format(LocalDate.Formats.ISO))
             }
         }
-
-        context("/api") {
-            useOnly<JsonBody>()
-
-            annotated<TripRoutes>()
-            annotated<CacheRoutes>()
-
-            openApi()
-        }
-
-        val processor = DefaultJWTProcessor<SecurityContext>().apply {
-            jwsTypeVerifier = DefaultJOSEObjectTypeVerifier(JOSEObjectType("at+jwt"), JOSEObjectType.JWT)
-            jwsKeySelector = JWSVerificationKeySelector(
-                JWSAlgorithm.ES384,
-                JWKSourceBuilder.create<SecurityContext>(URI("https://auth.gmmz.dev/oidc/jwks").toURL())
-                    .retrying(true)
-                    .build()
-            )
-
-            jwtClaimsSetVerifier = DefaultJWTClaimsVerifier(
-                JWTClaimsSet.Builder()
-                    .issuer("https://auth.gmmz.dev/oidc")
-                    .audience("https://flights.gmmz.dev/private")
-                    .build(),
-
-                setOf(
-                    JWTClaimNames.SUBJECT,
-                    JWTClaimNames.ISSUED_AT,
-                    JWTClaimNames.EXPIRATION_TIME,
-                    JWTClaimNames.AUDIENCE
-                )
-            )
-        }
-
-
-        context("/private") {
-            useOnly<JsonBody>()
-            openApi()
-            before {
-                val token = (it.header("Authentication") ?: throw StatusCodeException(
-                    StatusCode.Forbidden,
-                    "No Authentication header specified"
-                )).replace("Bearer ", "")
-
-
-                it.attr(
-                    "jwt",
-
-                    try {
-                        jackson.convertValue<JWTData>(
-                            processor.process(token, null).toJSONObject(),
-                            JWTData::class.java
-                        )
-                    } catch (e: Exception) {
-                        if (e is ParseException || e is BadJOSEException) {
-                            throw StatusCodeException(StatusCode.Forbidden, "Invalid JWT.")
-                        } else {
-                            throw e;
-                        }
-                    }
-                )
-            }
-
-            get("/") {
-                return@get attr("jwt")
-            }
-
-            annotated<UserRoutes>()
-        }
-    }.also { it.start() }
+    ))
 }
+
+/**
+ * TODO: scrape next pages + pagination, asset versioning
+ */
+@OptIn(ExperimentalEncodingApi::class)
+fun main() = Server(
+    requestIdGenerator = XRequestIdGenerator(),
+    httpExchangeCreator = XForwardedHttpExchange::class.primaryConstructor!!
+).apply {
+    converters()
+    use<DBModule>()
+    use<DBMigrator>()
+    use<RequestTransactionHandler>()
+    use(JsonBody(jackson))
+
+    register(this)
+    register<AirportCache>()
+    register<IconCache>()
+    register<TripService>()
+    register<UsersRepository>()
+
+    // Bot TG
+    CoroutineScope(Dispatchers.Default + SupervisorJob()).launch {
+        if(!Config.isDev) bot.handleUpdates()
+    }
+
+    before<CorsHandler>()
+
+    errors.on<Exception> {
+        ErrorResponse(
+            statusCode = (it as? StatusCodeException)?.statusCode ?: StatusCode.InternalServerError,
+            message = jackson.convertValue(Response.Error(NoStackTraceException(it.message, it).message.toString()))
+        )
+    }
+
+    ssr()
+    jwt()
+    context("/bookUrls") {
+        get {
+            val path = this.queryParams["url"]?.base64Decode()?.toString(Charset.defaultCharset()) ?: error("gay")
+
+            require(path.contains("book/b.php")) { "gay" }
+
+            "https://www.azair.eu/$path".httpGet().body.byteStream()
+                .transferTo(startResponse(StatusCode.OK, contentType = "text/html"))
+            null
+        }
+    }
+
+    context("/api") {
+        useOnly<JsonBody>()
+
+        annotated<TripRoutes>()
+        annotated<CacheRoutes>()
+
+        openApi()
+    }
+}.run { this.start(); server = this }
 
 sealed class Response<T>(ok: Boolean) {
     data class Success<T>(val data: T) : Response<T>(true)
