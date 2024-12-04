@@ -88,8 +88,3 @@
         @apply bg-background text-foreground;
     }
 }
-
-html {
-    visibility: visible;
-    opacity: 1;
-}

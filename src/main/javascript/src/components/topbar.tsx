@@ -13,7 +13,7 @@ import {useDisplayStore, useFlightsStore} from "@/state.tsx";
 import {Input} from "@/components/ui/input.tsx";
 import {useIsMobile} from "@/hooks/use-mobile.tsx";
 
-export function TopBar() {
+export default function TopBar() {
     const flights = useFlightsStore(e => e.flights)
     const {setOrder, setFilter} = useDisplayStore()
     const isMobile = useIsMobile()

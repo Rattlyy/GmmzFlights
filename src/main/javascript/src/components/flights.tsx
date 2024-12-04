@@ -5,14 +5,12 @@ import {Card, CardContent} from "@/components/ui/card.tsx";
 import {Calendar, Clock, MoveUp, PlaneLanding, PlaneTakeoff} from "lucide-react";
 import {Separator} from "@/components/ui/separator.tsx";
 import {Button} from "@/components/ui/button.tsx";
-import papera from "@/assets/papera.json"
-import aereoVola from "@/assets/aereo-vola.json"
 import {Popover, PopoverContent, PopoverTrigger} from "@/components/ui/popover.tsx";
 import {lottieOptions} from "@/lib/utils.ts";
-import {Fragment} from "react";
+import {Fragment, useEffect, useState} from "react";
 import {compareAsc, format, parseISO} from "date-fns";
 import {useIsMobile} from "@/hooks/use-mobile.tsx";
-import Lottie from "react-lottie"
+import Lottie from "react-lottie";
 
 export default function Flights() {
     const isMobile = useIsMobile()
@@ -22,6 +20,15 @@ export default function Flights() {
         "get",
         "/icons"
     )
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const [papera, setPapera] = useState<any>()
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const [aereo, setAereo] = useState<any>()
+
+    useEffect(() => {
+        fetch("/papera.json").then(response => response.json()).then(data => setPapera(data))
+        fetch("/aereo-vola.json").then(response => response.json()).then(data => setAereo(data))
+    }, [Lottie]);
 
     if (result == null || isLoading) {
         return <>
@@ -30,7 +37,7 @@ export default function Flights() {
             </div> : null}
             <div className={"w-full h-full flex flex-col items-center justify-center"}>
                 <Lottie
-                    options={isLoading ? lottieOptions(aereoVola) : lottieOptions(papera)}
+                    options={isLoading ? lottieOptions(aereo) : lottieOptions(papera)}
                     isClickToPauseDisabled={true}
                     height={200}
                     width={200}

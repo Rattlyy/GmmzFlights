@@ -1,4 +1,4 @@
-package it.rattly.flights
+package it.rattly.flights.modules
 
 import com.nimbusds.jose.JOSEObjectType
 import com.nimbusds.jose.JWSAlgorithm
@@ -11,6 +11,7 @@ import com.nimbusds.jwt.JWTClaimNames
 import com.nimbusds.jwt.JWTClaimsSet
 import com.nimbusds.jwt.proc.DefaultJWTClaimsVerifier
 import com.nimbusds.jwt.proc.DefaultJWTProcessor
+import it.rattly.flights.jackson
 import it.rattly.flights.users.JWTData
 import it.rattly.flights.users.UserRoutes
 import klite.Server

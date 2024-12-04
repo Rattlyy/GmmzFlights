@@ -1,4 +1,4 @@
-package it.rattly.flights
+package it.rattly.flights.modules
 
 import klite.AssetsHandler
 import klite.Config

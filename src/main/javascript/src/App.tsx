@@ -3,16 +3,20 @@ import {
     SidebarInset,
     SidebarProvider,
 } from "@/components/ui/sidebar"
-import Flights from "@/components/flights.tsx";
-import {TopBar} from "@/components/topbar.tsx";
+import {lazy, Suspense} from "react";
 
 export function App() {
+    const TopBar = lazy(() => import("@/components/topbar.tsx"))
+    const Flights = lazy(() => import("@/components/flights.tsx"))
+
     return (
         <SidebarProvider>
             <AppSidebar/>
             <SidebarInset>
-                <TopBar/>
-                {!import.meta.env.SSR ? <Flights/> : null}
+                <Suspense fallback={<div className={"w-full h-full flex items-center justify-center"}>Loading...</div>}>
+                    <TopBar/>
+                    <Flights/>
+                </Suspense>
             </SidebarInset>
         </SidebarProvider>
     )

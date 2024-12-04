@@ -1,5 +1,5 @@
-import {createRoot} from 'react-dom/client'
-import './index.css'
+import {hydrateRoot} from 'react-dom/client'
+import "@/index.css"
 
 import {ReactQueryDevtools} from '@tanstack/react-query-devtools'
 import {QueryClient, QueryClientProvider} from "@tanstack/react-query";
@@ -11,8 +11,8 @@ import {
     RouterProvider,
 } from "react-router-dom";
 import {Callback} from "@/callback.tsx";
-import {Toaster} from "@/components/ui/sonner.tsx";
 import {StrictMode} from "react";
+import {Toaster} from "@/components/ui/sonner.tsx";
 
 const config: LogtoConfig = {
     endpoint: 'https://auth.gmmz.dev/',
@@ -30,10 +30,10 @@ const config: LogtoConfig = {
 
 const router = createBrowserRouter([
     {path: "/", element: <App/>,},
-    {path: "/auth", element: <Callback />}
+    {path: "/auth", element: <Callback/>}
 ]);
 
-createRoot(document.getElementById('root')!).render(
+hydrateRoot(document.getElementById('root')!,
     <StrictMode>
         <LogtoProvider config={config}>
             <QueryClientProvider client={new QueryClient()}>

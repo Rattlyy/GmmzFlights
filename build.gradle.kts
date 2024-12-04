@@ -86,6 +86,11 @@ jib {
                     setFrom("src/main/javascript/node_modules/text-encoding")
                     into = "/web/node_modules/text-encoding"
                 }
+
+                path {
+                    setFrom("src/main/resources/public")
+                    into = "/web"
+                }
             }
         }
     }

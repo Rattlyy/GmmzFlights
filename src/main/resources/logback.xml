@@ -11,11 +11,9 @@
     <logger name="io.netty.resolver.dns.DnsQueryContext" level="OFF"/>
     <logger name="io.netty.resolver.dns.DnsNameResolver" level="OFF"/>
     <logger name="org.redisson.connection.DNSMonitor" level="OFF"/>
-
-    <logger name="org.springframework" level="error"
-            additivity="false">
-        <appender-ref ref="STDOUT" />
-    </logger>
+    <logger name="org.redisson.connection.ConnectionsHolder" level="OFF"/>
+    <logger name="org.redisson.client.RedisConnection" level="OFF"/>
+    <logger name="io.netty.*" level="OFF"/>
 
     <root level="DEBUG">
         <appender-ref ref="STDOUT" />
