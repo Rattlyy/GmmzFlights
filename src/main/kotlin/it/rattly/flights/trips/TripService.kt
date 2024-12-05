@@ -8,6 +8,7 @@ import it.rattly.flights.trips.BookUrl
 import it.rattly.flights.trips.Flight
 import it.rattly.flights.trips.Trip
 import it.rattly.flights.cacheable.impl.AirportCache
+import klite.NotFoundException
 import klite.base64Encode
 import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
@@ -19,10 +20,7 @@ import org.apache.http.client.utils.URIBuilder
 import kotlin.math.pow
 import kotlin.math.roundToInt
 
-//TODO: testare per bene ste !! perchè prevedo gia i nullptr a morire
-//TODO: rimpiazzare ogni !! con un sistenma di exception handling
 //TODO: Rivedere in generale il codice perchè fa oggettivamente schifo
-//TODO: Returna un result decente usando i throws al posto di !! cosi gestiamo tutto meglio da compose
 
 class TripService(private val airportCache: AirportCache) {
     suspend fun fetchTrips(
@@ -42,8 +40,8 @@ class TripService(private val airportCache: AirportCache) {
         ).let { document ->
             // scraped from azair's website, idk how it works but it works
             // coded at 3 am and I never want to touch this code again
-            document.select("#reslist").first()!!.children().filter { it.classNames().contains("result") }
-                .map { res ->
+            document.select("#reslist").first()?.children()?.filter { it.classNames().contains("result") }
+                ?.map { res ->
                     Trip(
                         hops = scrapeFlights(res, airportCache),
                         lengthOfStay = 212,
@@ -63,7 +61,7 @@ class TripService(private val airportCache: AirportCache) {
                             )
                         }.filterNot { it.urls.isEmpty() }.distinct()
                     )
-                }
+                } ?: throw NotFoundException("")
         }
     }
 }
@@ -72,20 +70,20 @@ suspend fun scrapeFlights(res: Element, airportCache: AirportCache) =
     res.select(".detail").map { detail ->
         val date = res.select(".date").map { it.text() }
         var pIndex = -1
-        detail.select("p").map { p -> // hack da rivedere che manco mi ricordo perchè ho fatto
+        detail.select("p").mapNotNull { p -> // hack da rivedere che manco mi ricordo perchè ho fatto
             if (pIndex != 1) pIndex += 1
 
-            val from = p.select(".from").first()!!
-            val to = p.select(".to").first()!!
-            val sourceAirportName = from.select(".code").first()!!.text().take(3)
-            val destinationAirportName = to.select(".code").first()!!.text().take(3)
+            val from = p.select(".from").first() ?: return@mapNotNull null
+            val to = p.select(".to").first()?: return@mapNotNull null
+            val sourceAirportName = from.select(".code").first()?.text()?.take(3) ?: return@mapNotNull null
+            val destinationAirportName = to.select(".code").first()?.text()?.take(3) ?: return@mapNotNull null
             val departureTime = from.text().split(" ")[1]
             val arrivalTime = to.text().split(" ")[0]
 
-            val airline = p.select(".airline").first()!!
+            val airline = p.select(".airline").first()?: return@mapNotNull null
             val company = airline.text()
             val iata = airline.classNames().last().replace("iata", "")
-            val price = p.select(".legPrice").first()!!.text().replace("€", "").toDouble().round(2)
+            val price = p.select(".legPrice").first()?.text()?.replace("€", "")?.toDouble()?.round(2) ?: return@mapNotNull null
 
             val format = LocalDate.Format {
                 dayOfMonth() ; char('/'); monthNumber(); char('/'); yearTwoDigits(2000)

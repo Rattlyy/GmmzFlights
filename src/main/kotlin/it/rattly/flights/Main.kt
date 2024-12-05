@@ -79,13 +79,6 @@ fun main() = Server(
 
     before<CorsHandler>()
 
-    errors.on<Exception> {
-        ErrorResponse(
-            statusCode = (it as? StatusCodeException)?.statusCode ?: StatusCode.InternalServerError,
-            message = jackson.convertValue(Response.Error(NoStackTraceException(it.message, it).message.toString()))
-        )
-    }
-
     val testSSR = true
     if (Config.isDev && !testSSR)
         assets("/", AssetsHandler(Path.of("src/main/resources/public")))
@@ -113,11 +106,6 @@ fun main() = Server(
         openApi()
     }
 }.run { this.start(); server = this }
-
-sealed class Response<T>(ok: Boolean) {
-    data class Success<T>(val data: T) : Response<T>(true)
-    data class Error(val error: String) : Response<String>(false)
-}
 
 fun converters() {
     Converter.use<List<String>> {

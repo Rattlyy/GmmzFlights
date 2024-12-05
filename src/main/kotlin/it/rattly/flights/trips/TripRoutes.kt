@@ -1,22 +1,15 @@
 package it.rattly.flights.trips
 
-import fuel.httpGet
-import it.rattly.flights.Response
-import it.rattly.flights.trips.AirportQuery
-import it.rattly.flights.trips.PLACEHOLDER_TRIP
-import it.rattly.flights.trips.Trip
 import it.rattly.flights.cacheable.impl.AirportCache
 import it.rattly.flights.cacheable.impl.SingleAirport
 import it.rattly.flights.redisson
 import klite.annotations.GET
 import klite.annotations.QueryParam
-import klite.base64Decode
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.reactive.awaitSingle
 import kotlinx.datetime.LocalDate
 import org.redisson.api.RLocalCachedMapReactive
 import org.redisson.api.options.LocalCachedMapOptions.name
-import java.nio.charset.Charset
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.toJavaDuration
 
@@ -47,7 +40,7 @@ class TripRoutes(private val tripService: TripService, private val airportCache:
         @QueryParam("endDate") endDate: LocalDate,
         @QueryParam("everywhere") everywhere: Boolean = false,
         @QueryParam("direct") direct: Boolean = false,
-    ): Response<List<Trip>> {
+    ): List<Trip> {
         require(startDate < endDate) { "Start date must be before end date." }
         require(adults >= 0) { "Adults must be a positive number." }
         require(children >= 0) { "Children must be a positive number." }
@@ -76,7 +69,7 @@ class TripRoutes(private val tripService: TripService, private val airportCache:
         ).sumOf { it.hashCode() }
 
         return if (cache.containsKey(cacheKey).awaitSingle())
-            Response.Success(cache.get(cacheKey).awaitSingle().also { println("[$cacheKey] HIT") })
+            cache.get(cacheKey).awaitSingle().also { println("[$cacheKey] HIT") }
         else tripService.fetchTrips(
             AirportQuery(
                 sourceAirports.first().name,
@@ -97,7 +90,7 @@ class TripRoutes(private val tripService: TripService, private val airportCache:
             endDate,
             direct
         ).fold(
-            onSuccess = { println("[$cacheKey] MISS"); cache.put(cacheKey, it).subscribe(); Response.Success(it) },
+            onSuccess = { println("[$cacheKey] MISS"); cache.put(cacheKey, it).subscribe(); it },
             onFailure = { throw it }
         ) //TODO: handle nothing found
     }

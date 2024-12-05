@@ -1,7 +1,3 @@
-// class it.rattly.flights.Response$Error
-export interface ResponseError {error: string}
-// class it.rattly.flights.Response$Success
-export interface ResponseSuccess<T> {data: T}
 // class it.rattly.flights.cacheable.impl.Icon
 export interface Icon {code: string; css: string}
 // class it.rattly.flights.cacheable.impl.SingleAirport

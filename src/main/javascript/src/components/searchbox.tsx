@@ -2,7 +2,7 @@ import {$api, apiClient} from "../api/api.ts";
 import {PlaneLanding, PlaneTakeoff} from "lucide-react";
 import {useFlightsStore} from "../state.tsx";
 import React, {useEffect, useMemo} from "react";
-import {responseErrorSchema, tripSchema} from "../api/zod.ts";
+import {tripSchema} from "../api/zod.ts";
 import {Button} from "@/components/ui/button.tsx";
 import {z} from "zod";
 import {useForm} from "react-hook-form";
@@ -69,52 +69,43 @@ export function SearchBox() {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [everywhereToggled]);
 
-    function onSubmit(values: z.infer<typeof formSchema>) {
+    async function onSubmit(values: z.infer<typeof formSchema>) {
         setIsInFlight(true)
-        apiClient.GET("/flights", {
-            params: {
-                query: {
-                    ...values,
-                    //@ts-expect-error codegen rotto
-                    sourceAirports: values.sourceAirports.join(","),
-                    //@ts-expect-error codegen rotto
-                    destinationAirports: values.destinationAirports.join(","),
-                    startDate: values.dateRange.from.toISOString(),
-                    endDate: values.dateRange.to.toISOString(),
-                    dateRange: undefined
-                }
-            }
-        }).then((res) => {
-            const flightResultSchema = z.object({
-                data: z.array(tripSchema)
-            })
 
-            flightResultSchema.safeParseAsync(res.data).then(results => {
-                console.log(results)
-                if (results.success) {
-                    setFlights(results.data.data)
-                } else {
-                    responseErrorSchema.safeParseAsync(res.data).then(error => {
-                        if (error.success) {
-                            toast("Search error", {
-                                description: error.data.error
-                            })
-                        } else {
-                            toast("Search error", {
-                                description: "Search is currently unavailable. Contact @Rattly on Telegram."
-                            })
-                        }
-                    })
+        try {
+            const res = (await apiClient.GET("/flights", {
+                params: {
+                    query: {
+                        ...values,
+                        //@ts-expect-error codegen rotto TODO klite supporta array
+                        sourceAirports: values.sourceAirports.join(","),
+                        //@ts-expect-error codegen rotto
+                        destinationAirports: values.destinationAirports.join(","),
+                        startDate: values.dateRange.from.toISOString(),
+                        endDate: values.dateRange.to.toISOString(),
+                        dateRange: undefined
+                    }
                 }
-            })
-        }).catch((e) => {
+            })).response
+
+            if (res.status == 404)
+                toast("No flights found", {
+                    description: "No flights found for the given criteria",
+                })
+            else if (res.status == 200)
+                setFlights(await z.array(tripSchema).parseAsync(await res.json()))
+            else toast("Server error occurred", {
+                    description: await res.text(),
+                })
+        } catch (e) {
             console.log(e)
             toast("Client error occurred", {
-                description: e,
+                // @ts-expect-error exception must be any
+                description: e.toString(),
             })
-        }).finally(() => {
+        } finally {
             setIsInFlight(false)
-        })
+        }
     }
 
     return (
