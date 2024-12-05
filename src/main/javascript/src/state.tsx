@@ -6,7 +6,7 @@ import {devtools} from "zustand/middleware";
 interface FlightsStore {
     flights: Trip[] | null;
     isLoading: boolean
-    setFlights: (trips: Trip[]) => void
+    setFlights: (trips: Trip[] | null) => void
     setIsLoading: (isLoading: boolean) => void
 }
 

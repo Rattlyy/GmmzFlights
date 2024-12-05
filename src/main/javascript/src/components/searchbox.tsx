@@ -70,10 +70,11 @@ export function SearchBox() {
     }, [everywhereToggled]);
 
     async function onSubmit(values: z.infer<typeof formSchema>) {
+        setFlights(null)
         setIsInFlight(true)
 
         try {
-            const res = (await apiClient.GET("/flights", {
+            const res = await apiClient.GET("/flights", {
                 params: {
                     query: {
                         ...values,
@@ -86,16 +87,16 @@ export function SearchBox() {
                         dateRange: undefined
                     }
                 }
-            })).response
+            })
 
-            if (res.status == 404)
+            if (res.response.status == 404)
                 toast("No flights found", {
                     description: "No flights found for the given criteria",
                 })
-            else if (res.status == 200)
-                setFlights(await z.array(tripSchema).parseAsync(await res.json()))
+            else if (res.response.status == 200)
+                setFlights(await z.array(tripSchema).parseAsync(res.data))
             else toast("Server error occurred", {
-                    description: await res.text(),
+                    description: res.data ? res.data.toString() : "",
                 })
         } catch (e) {
             console.log(e)

@@ -92,7 +92,7 @@ interface FlightProps {
 export function Flight({flight, icons}: FlightProps) {
     return <Card>
         <CardContent className="flex flex-col gap-4 pt-8 pl-8 pr-8">
-            {flight.hops.map(hop => <>
+            {flight.hops.map((hop, i) => <Fragment key={i}>
                 <div className="flex items-center justify-between gap-2 font-medium text-xl">
                     {[hop.sourceAirport, hop.destinationAirport].map((airport, i) =>
                         <Popover key={i} modal={false}>
@@ -149,7 +149,7 @@ export function Flight({flight, icons}: FlightProps) {
                     </div>
                 </div>
                 <Separator/>
-            </>)}
+            </Fragment>)}
             <div className="flex-col items-center justify-between">
                 {flight.hops.map(flight => <>
                     <div className="flex justify-between">
