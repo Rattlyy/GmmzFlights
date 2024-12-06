@@ -1,23 +1,32 @@
-import {AppSidebar} from "@/components/app-sidebar"
 import {
     SidebarInset,
     SidebarProvider,
 } from "@/components/ui/sidebar"
-import {lazy, Suspense} from "react";
+import {lazy, ReactNode, Suspense} from "react";
+import TopBar from "@/components/topbar.tsx";
+import {Skeleton} from "@/components/ui/skeleton.tsx";
+import AppSidebar from "@/components/app-sidebar.tsx";
 
 export function App() {
-    const TopBar = lazy(() => import("@/components/topbar.tsx"))
     const Flights = lazy(() => import("@/components/flights.tsx"))
 
     return (
         <SidebarProvider>
             <AppSidebar/>
             <SidebarInset>
-                <Suspense fallback={<div className={"w-full h-full flex items-center justify-center"}>Loading...</div>}>
-                    <TopBar/>
+                <TopBar/>
+                <CenteredSuspense w={"full"} h={"full"}>
                     <Flights/>
-                </Suspense>
+                </CenteredSuspense>
             </SidebarInset>
         </SidebarProvider>
+    )
+}
+
+export const CenteredSuspense = ({w, h, children}: { w: string, h: string, children: ReactNode }) => {
+    return (
+        <Suspense fallback={<Skeleton className={"w-" + w + " h-" + h + " rounded-full"}/>}>
+            {children}
+        </Suspense>
     )
 }

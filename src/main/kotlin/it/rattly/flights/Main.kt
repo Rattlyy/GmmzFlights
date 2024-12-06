@@ -79,7 +79,7 @@ fun main() = Server(
 
     before<CorsHandler>()
 
-    val testSSR = true
+    val testSSR = false
     if (Config.isDev && !testSSR)
         assets("/", AssetsHandler(Path.of("src/main/resources/public")))
     else ssr()

@@ -1,6 +1,5 @@
 import * as React from "react"
 
-import {NavUser} from "@/components/nav-user"
 import {
     Sidebar,
     SidebarContent,
@@ -9,17 +8,25 @@ import {
     SidebarMenu,
     SidebarRail,
 } from "@/components/ui/sidebar"
-import {SearchBox} from "@/components/searchbox.tsx";
+import {CenteredSuspense} from "@/App.tsx";
+import {lazy} from "react";
 
-export function AppSidebar({...props}: React.ComponentProps<typeof Sidebar>) {
+export default function AppSidebar({...props}: React.ComponentProps<typeof Sidebar>) {
+    const SearchBox = lazy(() => import("@/components/searchbox.tsx"))
+    const NavUser = lazy(() => import("@/components/nav-user.tsx"))
+
     return (
         <Sidebar {...props}>
             <SidebarHeader className="h-16 border-b border-sidebar-border">
-                {!import.meta.env.SSR ? <NavUser /> : null}
+                <CenteredSuspense w={"200px"} h={"300px"}>
+                    <NavUser/>
+                </CenteredSuspense>
             </SidebarHeader>
             <SidebarContent>
                 <div className={"p-3"}>
-                    <SearchBox/>
+                    <CenteredSuspense w={"200px"} h={"full"}>
+                        <SearchBox/>
+                    </CenteredSuspense>
                 </div>
             </SidebarContent>
             <SidebarFooter>

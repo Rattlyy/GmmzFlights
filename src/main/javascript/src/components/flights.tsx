@@ -6,11 +6,10 @@ import {Calendar, Clock, MoveUp, PlaneLanding, PlaneTakeoff} from "lucide-react"
 import {Separator} from "@/components/ui/separator.tsx";
 import {Button} from "@/components/ui/button.tsx";
 import {Popover, PopoverContent, PopoverTrigger} from "@/components/ui/popover.tsx";
-import {lottieOptions} from "@/lib/utils.ts";
 import {Fragment, useEffect, useState} from "react";
 import {compareAsc, format, parseISO} from "date-fns";
 import {useIsMobile} from "@/hooks/use-mobile.tsx";
-import Lottie from "react-lottie";
+import {Lottie} from '@alfonmga/react-lottie-light-ts'
 
 export default function Flights() {
     const isMobile = useIsMobile()
@@ -37,10 +36,16 @@ export default function Flights() {
             </div> : null}
             <div className={"w-full h-full flex flex-col items-center justify-center"}>
                 <Lottie
-                    options={isLoading ? lottieOptions(aereo) : lottieOptions(papera)}
-                    isClickToPauseDisabled={true}
-                    height={200}
-                    width={200}
+                    height={"200px"}
+                    width={"200px"}
+                    config={{
+                        loop: true,
+                        autoplay: true,
+                        animationData: isLoading ? aereo : papera,
+                        rendererSettings: {
+                            preserveAspectRatio: "xMidYMid slice"
+                        }
+                    }}
                 />
 
                 <div className={"flex flex-row items-center justify-center text-center pt-4"}>

@@ -9,10 +9,10 @@ export default defineConfig(({isSsrBuild}) => {
         build: {
             manifest: true,
             rollupOptions: {
-                treeshake: true,
+                treeshake: "recommended",
                 output: {
                     manualChunks: {
-                        lottie: ['react-lottie'],
+                        lottie: ['@alfonmga/react-lottie-light-ts'],
                         react: ['react', 'react-dom'],
                         zod: ['zod'],
                         router: ['react-router-dom'],

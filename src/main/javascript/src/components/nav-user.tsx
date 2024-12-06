@@ -38,7 +38,7 @@ type User = {
     avatar: string,
 }
 
-export function NavUser() {
+export default function NavUser() {
 
     const {isMobile} = useSidebar()
     const {signIn, signOut, isAuthenticated, fetchUserInfo, getAccessToken} = useLogto();

@@ -22,7 +22,7 @@ import {
 import {addYears} from "date-fns";
 import {toast} from "sonner";
 
-export function SearchBox() {
+export default function SearchBox() {
     const {isLoading: isInFlight, setIsLoading: setIsInFlight, setFlights} = useFlightsStore()
 
     const formSchema = z.object({

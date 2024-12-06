@@ -8,15 +8,3 @@ export function cn(...inputs: ClassValue[]) {
 export function baseUrl(str: string) {
     return (import.meta.env.DEV ? "http://localhost:5173/" : "https://flights.gmmz.dev/") + str
 }
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function lottieOptions(data: any) {
-    return {
-        loop: true,
-        autoplay: true,
-        animationData: data,
-        rendererSettings: {
-            preserveAspectRatio: "xMidYMid slice"
-        }
-    }
-}
