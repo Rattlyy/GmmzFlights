@@ -85,9 +85,9 @@ fun main() = Server(
     jwt()
     context("/bookUrls") {
         get {
-            val path = this.queryParams["url"]?.base64Decode()?.toString(Charset.defaultCharset()) ?: error("gay")
-
-            require(path.contains("book/b.php")) { "gay" }
+            val path = this.queryParams["url"]?.base64Decode()?.toString(Charset.defaultCharset()) ?: throw BodyNotAllowedException()
+            if (!path.contains("book/b.php")) throw BodyNotAllowedException()
+            // TODO vulnerable to SSRF
 
             "https://www.azair.eu/$path".httpGet().body.byteStream()
                 .transferTo(startResponse(StatusCode.OK, contentType = "text/html"))
