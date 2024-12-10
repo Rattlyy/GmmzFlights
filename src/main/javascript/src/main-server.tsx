@@ -1,19 +1,25 @@
-import {StrictMode} from 'react'
-import {renderToString} from 'react-dom/server'
-import {QueryClient, QueryClientProvider} from "@tanstack/react-query";
+import {renderToReadableStream} from 'react-dom/server'
 import {StaticRouter} from "react-router-dom/server";
-import {App} from "@/App.tsx";
+import {AppRoutes, Shell} from "@/App.tsx";
 
-function render(_url: string) {
-    return renderToString(
-        <StrictMode>
-            <QueryClientProvider client={new QueryClient()}>
-                <StaticRouter location={_url}>
-                    <App />
-                </StaticRouter>
-            </QueryClientProvider>
-        </StrictMode>,
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function render(_url: string, bundleName: string, javaStream: any) {
+    const stream = await renderToReadableStream(
+        <Shell>
+            <StaticRouter location={_url}>
+                <AppRoutes/>
+            </StaticRouter>
+        </Shell>, {
+            bootstrapModules: [bundleName]
+        }
     )
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await stream.pipeTo(new WritableStream<any>({
+        write(chunk) {
+            javaStream['write(byte[])'](chunk)
+        }
+    }))
 }
 
 // @ts-expect-error lollone

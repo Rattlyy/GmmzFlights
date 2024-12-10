@@ -20,7 +20,8 @@ fun Server.ssr() {
         .option("js.commonjs-require", "true")
         .option(
             "js.commonjs-require-cwd",
-            Path.of("${if (Config.isDev) "./src/main/javascript/" else "/web/"}node_modules").toAbsolutePath().toString()
+            Path.of("${if (Config.isDev) "./src/main/javascript/" else "/web/"}node_modules").toAbsolutePath()
+                .toString()
         )
         .allowAllAccess(true)
         .allowIO(IOAccess.ALL)
@@ -29,25 +30,31 @@ fun Server.ssr() {
 
     @Language("JavaScript")
     val polyfillContents = """
-            var TextEncoder = require("text-encoding").TextEncoder
-            var TextDecoder = require("text-encoding").TextDecoder
-            var window = this;
-            var SecureRandom = Java.type('java.security.SecureRandom');
-            var crypto = {
-                getRandomValues: (buf) => {
-                    var bytes = SecureRandom.getSeed(buf.length);
-                    buf.set(bytes);
-                }
+        var process = {
+            env: {
+                NODE_DEBUG: false
             }
-
-            var process = {
-                env: {
-                    NODE_DEBUG: false
-                }
+        }
+        
+        var TextEncoder = require("text-encoding").TextEncoder
+        var TextDecoder = require("text-encoding").TextDecoder
+        var ReadableStream = require("web-streams-polyfill").ReadableStream;
+        var WritableStream = require("web-streams-polyfill").WritableStream;
+        var URL = require('url').Url
+        var window = this;
+        var global = {};
+        var SecureRandom = Java.type('java.security.SecureRandom');
+        var crypto = {
+            getRandomValues: (buf) => {
+                var bytes = SecureRandom.getSeed(buf.length);
+                buf.set(bytes);
             }
-            
-            function setTimeout(callback,delay) {}
-        """
+        }
+        
+        function fetch(resource, options) {}
+        function fetch(resource) {}
+        function setTimeout(callback,delay) {}
+    """
 
     ctx.eval("js", polyfillContents)
     ctx.eval(
@@ -61,21 +68,17 @@ fun Server.ssr() {
         ).mimeType("application/javascript+module").build()
     )
 
-    val rendered = ctx.eval("js", "window.renderFunc('/')").toString()
-    val file = File(if (Config.isDev) "./src/main/javascript/dist/index.html" else "/web/index.html")
-        .readLines()
-        .joinToString("\n").replace(
-            "<div id=\"root\"></div>",
-            "<div id=\"root\" class=\"dark\">${rendered}</div>"
-        )
+    val bundleName = File(if (Config.isDev) "./src/main/javascript/dist/assets" else "/web/assets")
+        .list()
+        .first { it.startsWith("index") && it.endsWith("js") }
 
-    decorator { it, next ->
-        if (it.path != "/") {
-            return@decorator next(it)
-        }
-
-        it.send(StatusCode.OK, file, "text/html")
+    context("/") {
+        get {
+            val response = startResponse(StatusCode.OK, contentType = "text/html")
+            ctx.eval("js", "window").invokeMember("renderFunc", "/", "/assets/$bundleName", response)
+                .invokeMember("then")
+        };
     }
 
-    assets("/", AssetsHandler(Path.of(if (Config.isDev) "./src/main/javascript/dist" else "/web/")))
+    assets("/assets", AssetsHandler(Path.of(if (Config.isDev) "./src/main/javascript/dist" else "/web/")))
 }

@@ -39,9 +39,9 @@ export default function TopBar() {
         </> : null}
 
         {isMobile ?
-            flights ? null : <h1 className={"text-nowrap w-full text-center text-3xl font-bold"}>gmmz.dev // flights</h1>
+            flights ? null : <h1 className={"text-nowrap w-full text-white text-center text-3xl font-bold"}>gmmz.dev // flights</h1>
             :
-            <h1 className={(flights ? "" : "w-full grow") + "text-nowrap lg:text-3xl sm:text-xl font-bold flex flex-row gap-2 pb-3 pt-1 pl-3 pr-3 text-center items-center justify-end"}>
+            <h1 className={(flights ? "" : "w-full grow") + "text-white text-nowrap lg:text-3xl sm:text-xl font-bold flex flex-row gap-2 pb-3 pt-1 pl-3 pr-3 text-center items-center justify-end"}>
                 gmmz.dev // flights
             </h1>
         }

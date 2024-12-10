@@ -83,8 +83,8 @@ jib {
                 }
 
                 path {
-                    setFrom("src/main/javascript/node_modules/text-encoding")
-                    into = "/web/node_modules/text-encoding"
+                    setFrom("src/main/javascript/node_modules/")
+                    into = "/web/node_modules"
                 }
 
                 path {

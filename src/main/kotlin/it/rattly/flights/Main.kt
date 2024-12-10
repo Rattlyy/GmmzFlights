@@ -74,15 +74,13 @@ fun main() = Server(
 
     // Bot TG
     CoroutineScope(Dispatchers.Default + SupervisorJob()).launch {
-        if(!Config.isDev) bot.handleUpdates()
+        if (!Config.isDev) bot.handleUpdates()
     }
 
     before<CorsHandler>()
 
-    val testSSR = false
-    if (Config.isDev && !testSSR)
-        assets("/", AssetsHandler(Path.of("src/main/resources/public")))
-    else ssr()
+    if (Config["SSR"].toBoolean()) ssr()
+    else assets("/", AssetsHandler(Path.of("src/main/resources/public")))
 
     jwt()
     context("/bookUrls") {

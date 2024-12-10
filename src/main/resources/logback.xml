@@ -13,6 +13,7 @@
     <logger name="org.redisson.connection.DNSMonitor" level="OFF"/>
     <logger name="org.redisson.connection.ConnectionsHolder" level="OFF"/>
     <logger name="org.redisson.client.RedisConnection" level="OFF"/>
+    <logger name="org.redisson.command.RedisExecutor" level="OFF"/>
     <logger name="io.netty.*" level="OFF"/>
 
     <root level="DEBUG">
