@@ -25,9 +25,9 @@ export default function Flights() {
     const [aereo, setAereo] = useState<any>()
 
     useEffect(() => {
-        fetch("/papera.json").then(response => response.json()).then(data => setPapera(data))
-        fetch("/aereo-vola.json").then(response => response.json()).then(data => setAereo(data))
-    }, [Lottie]);
+        fetch("/assets/papera.json").then(response => response.json()).then(data => setPapera(data))
+        fetch("/assets/aereo-vola.json").then(response => response.json()).then(data => setAereo(data))
+    }, []);
 
     if (result == null || isLoading) {
         return <>

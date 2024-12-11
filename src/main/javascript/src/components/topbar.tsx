@@ -11,12 +11,10 @@ import {ArrowDownWideNarrow, ArrowUpNarrowWide, ArrowUpWideNarrow, Calendar, X} 
 import React from "react";
 import {useDisplayStore, useFlightsStore} from "@/state.tsx";
 import {Input} from "@/components/ui/input.tsx";
-import {useIsMobile} from "@/hooks/use-mobile.tsx";
 
 export default function TopBar() {
     const flights = useFlightsStore(e => e.flights)
     const {setOrder, setFilter} = useDisplayStore()
-    const isMobile = useIsMobile()
     return <div className={"flex flex-row gap-3 p-2 h-16 border-b border-sidebar-border bg-sidebar items-center"}>
         <SidebarTrigger className={"pl-2 animate-pulse"}/>
         {flights ? <>
@@ -38,13 +36,9 @@ export default function TopBar() {
             <Input className="grow" placeholder={"Search"} onChange={e => setFilter(e.target.value)}/>
         </> : null}
 
-        {isMobile ?
-            flights ? null : <h1 className={"text-nowrap w-full text-white text-center text-3xl font-bold"}>gmmz.dev // flights</h1>
-            :
-            <h1 className={(flights ? "" : "w-full grow") + "text-white text-nowrap lg:text-3xl sm:text-xl font-bold flex flex-row gap-2 pb-3 pt-1 pl-3 pr-3 text-center items-center justify-end"}>
-                gmmz.dev // flights
-            </h1>
-        }
+        <h1 className={(flights ? "hidden" : "w-full grow") + " text-white text-nowrap font-bold text-center text-3xl lg:flex lg:flex-row lg:gap-2 lg:pt-1 lg:p-3 lg:items-center lg:justify-end"}>
+            gmmz.dev // flights
+        </h1>
     </div>
 }
 

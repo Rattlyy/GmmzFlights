@@ -7,6 +7,7 @@ export function Index({children}: { children: React.ReactNode }) {
             <script defer data-domain="flights.gmmz.dev" src="https://plausible.gmmz.dev/js/script.js"></script>
             <meta charSet="UTF-8"/>
             <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+            <meta name="description" content="gmmz.dev - flights, the flight tracker price aggregator from the future"/>
             <title>gmmz.dev - flights</title>
 
             <link rel="apple-touch-icon" sizes="180x180"
@@ -17,11 +18,11 @@ export function Index({children}: { children: React.ReactNode }) {
                   href="https://corsproxy.io/?https://gmmz.dev/favicon-16x16.png"/>
             <link rel="mask-icon" href="https://corsproxy.io/?https://gmmz.dev/safari-pinned-tab.svg"
                   color="#5bbad5"/>
-           <style>{src}</style>
+            <link rel="stylesheet" href={"data:text/css;base64," + Buffer.from(src).toString('base64')}/>
         </head>
 
         <body>
-        <div id="root" className={"dark"}>{children}</div>
+        <div id="root" className={"dark font-sans"}>{children}</div>
         </body>
         </html>
     )

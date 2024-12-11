@@ -89,7 +89,7 @@ jib {
 
                 path {
                     setFrom("src/main/resources/public")
-                    into = "/web"
+                    into = "/web/assets"
                 }
             }
         }

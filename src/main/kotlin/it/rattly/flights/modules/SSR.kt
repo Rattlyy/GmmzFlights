@@ -40,6 +40,7 @@ fun Server.ssr() {
         var TextDecoder = require("text-encoding").TextDecoder
         var ReadableStream = require("web-streams-polyfill").ReadableStream;
         var WritableStream = require("web-streams-polyfill").WritableStream;
+        var Buffer = require('buffer/').Buffer
         var URL = require('url').Url
         var window = this;
         var global = {};
@@ -80,5 +81,5 @@ fun Server.ssr() {
         };
     }
 
-    assets("/assets", AssetsHandler(Path.of(if (Config.isDev) "./src/main/javascript/dist" else "/web/")))
+    assets("/assets", AssetsHandler(Path.of(if (Config.isDev) "./src/main/javascript/dist" else "/web")))
 }

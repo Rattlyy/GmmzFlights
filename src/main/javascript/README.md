@@ -1,1 +1,0 @@
-TODO: UNPIN icons

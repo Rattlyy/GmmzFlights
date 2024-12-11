@@ -11,7 +11,6 @@ import {QueryClient, QueryClientProvider} from "@tanstack/react-query";
 import {ReactQueryDevtools} from "@tanstack/react-query-devtools";
 import {ThemeProvider} from "@/theme-provider.tsx";
 import {Toaster} from "@/components/ui/sonner.tsx";
-import {Index} from "@/index.tsx";
 import {Route, Routes} from "react-router-dom";
 import {Callback} from "@/callback.tsx";
 
@@ -38,7 +37,6 @@ export function AppRoutes() {
 
 export function Shell({children}: { children: ReactNode }) {
     return (<StrictMode>
-        <Index>
             <LogtoProvider config={config}>
                 <QueryClientProvider client={new QueryClient()}>
                     {import.meta.env.DEV ? <ReactQueryDevtools initialIsOpen={false}/> : null}
@@ -48,7 +46,6 @@ export function Shell({children}: { children: ReactNode }) {
                     </ThemeProvider>
                 </QueryClientProvider>
             </LogtoProvider>
-        </Index>
     </StrictMode>)
 }
 
