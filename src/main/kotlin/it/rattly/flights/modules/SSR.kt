@@ -74,9 +74,9 @@ fun Server.ssr() {
         .first { it.startsWith("index") && it.endsWith("js") }
 
     context("/") {
-        get {
+        get(".*") {
             val response = startResponse(StatusCode.OK, contentType = "text/html")
-            ctx.eval("js", "window").invokeMember("renderFunc", "/", "/assets/$bundleName", response)
+            ctx.eval("js", "window").invokeMember("renderFunc", path, "/assets/$bundleName", response)
                 .invokeMember("then")
         };
     }
