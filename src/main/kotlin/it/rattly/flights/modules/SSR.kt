@@ -6,9 +6,7 @@ import klite.Server
 import klite.StatusCode
 import klite.isDev
 import org.graalvm.polyglot.Context
-import org.graalvm.polyglot.HostAccess
 import org.graalvm.polyglot.Source
-import org.graalvm.polyglot.io.IOAccess
 import org.intellij.lang.annotations.Language
 import java.io.File
 import java.nio.file.Path
@@ -24,8 +22,6 @@ fun Server.ssr() {
                 .toString()
         )
         .allowAllAccess(true)
-        .allowIO(IOAccess.ALL)
-        .allowHostAccess(HostAccess.ALL)
         .allowExperimentalOptions(true).build()
 
     @Language("JavaScript")
