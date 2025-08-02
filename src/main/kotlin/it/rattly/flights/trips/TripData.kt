@@ -39,7 +39,7 @@ data class Flight(
     val destinationAirport: SingleAirport,
     val departureTime: String,
     val arrivalTime: String,
-    val date: LocalDate, //TODO: fix serializer che piange dio cane dio porco value$kotlinx_datetime ok amo
+    val date: LocalDate, //TODO: fix serializer
     val duration: String,
     val price: Double,
     val company: String,
