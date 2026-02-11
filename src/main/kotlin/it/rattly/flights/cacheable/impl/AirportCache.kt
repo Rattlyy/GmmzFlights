@@ -6,6 +6,8 @@ import klite.Server
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
+import org.graalvm.polyglot.Context
+import org.graalvm.polyglot.Source
 
 class AirportCache(server: Server) : ItemCache<SingleAirport>("airports", SingleAirport::class, server) {
     suspend fun code(code: String) = all().find { it.code == code }
@@ -13,19 +15,22 @@ class AirportCache(server: Server) : ItemCache<SingleAirport>("airports", Single
     override suspend fun all() = super.all()
 
     override suspend fun getFromSOT() = withContext(Dispatchers.IO) {
-        "https://static2.azair.us/www-azair-eu-assets/js/airports_array.js"
-            .httpGet().body.string()
-            .split("var airportsArray = ")[1]
-            .split(";")[0]
-            .replace("{", "").replace("}", "")
-            .replace("\"", "")
-            .replace(" ", "")
-            .replace(",", "")
-            .split("\n")
-            .filterNot { it.isBlank() }
-            .map { it.split(":") }
-            .map { SingleAirport(it[1].replace("(", " ("), it[0]) }
-            .sortedBy { it.toString() }
+        var data = "https://static2.azair.us/www-azair-eu-assets/js/airports_array.js".httpGet().body.string()
+
+        data += """\n\n
+        function setArray(javaString) {
+            javaString = JSON.stringify(airportsArray);
+        }
+
+        window['setArray'] = setArray;
+        """
+
+        val ctx = Context.newBuilder("js").allowAllAccess(true).allowExperimentalOptions(true).build()
+        ctx.eval("js", data)
+        var airports = "";
+        ctx.eval("js", "window").invokeMember("setArray", airports);
+
+        
     }
 }
 
