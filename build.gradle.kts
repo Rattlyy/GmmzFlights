@@ -23,7 +23,7 @@ repositories {
 }
 
 dependencies {
-    val kliteVersion = "master-SNAPSHOT"//"1.6.9"
+    val kliteVersion = "main-SNAPSHOT"
     implementation("com.github.keksworks.klite:klite-server:$kliteVersion")
     implementation("com.github.keksworks.klite:klite-jdbc:$kliteVersion")
     implementation("com.github.keksworks.klite:klite-jackson:$kliteVersion")
