@@ -2,7 +2,7 @@ import java.io.ByteArrayOutputStream
 
 plugins {
     kotlin("jvm") version "2.3.20"
-    kotlin("plugin.serialization") version "2.3.20﻿"
+    kotlin("plugin.serialization") version "2.3.20"
 
     id("co.uzzu.dotenv.gradle") version "4.0.0"
     id("com.google.cloud.tools.jib") version "3.3.1"
