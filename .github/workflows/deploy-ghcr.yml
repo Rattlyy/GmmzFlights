@@ -34,6 +34,6 @@ jobs:
         run: ./gradlew --no-daemon jib
         env:
           REGISTRY_HOSTNAME: ghcr.io
-          REGISTRY_NAMESPACE: rattlyy
+          REGISTRY_NAMESPACE: ${{ github.repository_owner }}
           REGISTRY_USERNAME: ${{ github.actor }}
           REGISTRY_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
