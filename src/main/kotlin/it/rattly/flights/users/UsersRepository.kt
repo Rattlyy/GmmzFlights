@@ -13,6 +13,7 @@ import kotlin.time.toJavaDuration
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
+@OptIn(ExperimentalUuidApi::class)
 class UsersRepository(db: DataSource) : BaseCrudRepository<User, String>(db, "users") {
     val usersCache = redisson.getLocalCachedMap<String, User>(LocalCachedMapOptions.name<String, User>("users"))
     val tgCodeCache = redisson.getLocalCachedMap<Uuid, String>(
