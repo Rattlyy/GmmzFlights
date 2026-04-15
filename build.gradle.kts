@@ -60,7 +60,13 @@ tasks.register<Exec>("runViteBuild") {
     commandLine = listOf("bun", "run", "--bun", "build:all")
 }
 
+tasks.register<Exec>("installBunDeps") {
+    workingDir = layout.projectDirectory.dir("src/main/javascript").asFile
+    commandLine = listOf("bun", "install")
+}
+
 tasks.jib.get().dependsOn("runViteBuild")
+tasks.runViteBuild.get().dependsOn("installBunDeps")
 
 jib {
     from {
