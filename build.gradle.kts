@@ -24,12 +24,12 @@ repositories {
 
 dependencies {
     val kliteVersion = "master-SNAPSHOT"//"1.6.9"
-    implementation("com.github.codeborne.klite:klite-server:$kliteVersion")
-    implementation("com.github.codeborne.klite:klite-jdbc:$kliteVersion")
-    implementation("com.github.codeborne.klite:klite-jackson:$kliteVersion")
-    implementation("com.github.codeborne.klite:klite-json:$kliteVersion")
-    implementation("com.github.codeborne.klite:klite-jobs:$kliteVersion")
-    implementation("com.github.codeborne.klite:klite-openapi:$kliteVersion")
+    implementation("com.github.keksworks.klite:klite-server:$kliteVersion")
+    implementation("com.github.keksworks.klite:klite-jdbc:$kliteVersion")
+    implementation("com.github.keksworks.klite:klite-jackson:$kliteVersion")
+    implementation("com.github.keksworks.klite:klite-json:$kliteVersion")
+    implementation("com.github.keksworks.klite:klite-jobs:$kliteVersion")
+    implementation("com.github.keksworks.klite:klite-openapi:$kliteVersion")
 
     implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.6.0-RC.2")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:+")
