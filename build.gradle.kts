@@ -55,18 +55,18 @@ application {
     mainClass.set("it.rattly.flights.MainKt")
 }
 
-tasks.register<Exec>("runViteBuild") {
-    workingDir = layout.projectDirectory.dir("src/main/javascript").asFile
-    commandLine = listOf("bun", "run", "--bun", "build:all")
-}
-
-tasks.register<Exec>("installBunDeps") {
+val bunDeps = tasks.register<Exec>("installBunDeps") {
     workingDir = layout.projectDirectory.dir("src/main/javascript").asFile
     commandLine = listOf("bun", "install")
 }
 
+tasks.register<Exec>("runViteBuild") {
+    dependsOn(bunDeps)
+    workingDir = layout.projectDirectory.dir("src/main/javascript").asFile
+    commandLine = listOf("bun", "run", "--bun", "build:all")
+}
+
 tasks.jib.get().dependsOn("runViteBuild")
-tasks.runViteBuild.get().dependsOn("installBunDeps")
 
 jib {
     from {
