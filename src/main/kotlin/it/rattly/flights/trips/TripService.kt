@@ -68,11 +68,11 @@ class TripService(private val airportCache: AirportCache) {
 
 suspend fun scrapeFlights(res: Element, airportCache: AirportCache) =
     res.select(".detail").map { detail ->
-        val date = res.select(".date").map { it.text() }
         var pIndex = -1
         detail.select("p").mapNotNull { p -> // hack da rivedere che manco mi ricordo perchè ho fatto
             if (pIndex != 1) pIndex += 1
 
+            val date = res.select(".date").first()?.text() ?: return@mapNotNull null
             val from = p.select(".from").first() ?: return@mapNotNull null
             val to = p.select(".to").first()?: return@mapNotNull null
             val sourceAirportName = from.select(".code").first()?.text()?.take(3) ?: return@mapNotNull null
